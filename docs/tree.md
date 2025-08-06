@@ -1,19 +1,19 @@
-.
-├── BootStrap.js               # Main controller (entry point for orchestration)
-├── dom/                      
-│   ├── DomRegistry.js         # DOM asset mounting logic
-│   └── index.js               # Optional: exports or utilities for DOM
-├── legacy/
-│   ├── bootStrap.js
-│   └── domManager.js
-├── packages/
-│   ├── PackageManager.js      # Handles packages, modules, assets
-│   ├── AssetManager.js        # Handles loading and tracking non-module assets
-│   ├── ModuleManager.js       # Handles loading JS modules
-│   └── index.js               # Optional entrypoint for combined imports
-├── repo/
-│   └── Repo.js                # Package resolution logic
-├── docs/
-│   ├── packageDefinition.md   # Design of package files
-│   └── flow.md                # Bootstrapping or execution flow
-├── todo.md
+├── docs
+│   ├── AI_DISCLOSURE.md
+│   ├── tree.md
+│   └── USE_POLICY.md
+├── LICENSE.md
+├── README.md
+└── src
+    ├── BootStrap.js
+    ├── dom
+    │   └── DomRegistry.js
+    ├── legacy
+    │   ├── bootStrap.js
+    │   └── domManager.js
+    ├── mount
+    │   └── MountManager.js
+    ├── packages
+    │   └── PackageManager.js
+    └── repo
+        └── Repo.js
