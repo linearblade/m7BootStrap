@@ -5,7 +5,12 @@ It provides a clean and extensible framework for setting up runtime assets, modu
 
 > Don’t waste cycles building loaders to load loaders.
 > Let BootStrap do the groundwork — and get out of the way.
-> _(Looking for low-level access control instead? Check out [Siglatch](https://github.com/linearblade/siglatch) — battle-tested and written in C.)_
+
+⚠️ **Warning: Documentation Incomplete**
+> 
+> This project is currently under active development, and documentation is still being written.
+> Some features may be undocumented or subject to change.  
+> Please check back soon as we continue to update this repository.> _(Looking for low-level access control instead? Check out [Siglatch](https://github.com/linearblade/siglatch) — battle-tested and written in C.)_
 
 ---
 
