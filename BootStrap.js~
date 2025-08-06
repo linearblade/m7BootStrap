@@ -1,0 +1,86 @@
+/*
+ * BootStrap.js
+ * 
+ * The central controller for initializing and managing the application boot process.
+ * Delegates to modular subsystems: PackageManager, Repo, DomRegistry, etc.
+ * 
+ * Usage:
+ *   const bootstrap = new BootStrap(net, { repo: {...} });
+ *   await bootstrap.loadScene("scene:chess");
+ */
+
+import Repo from './repo/Repo.js';
+import PackageManager from './packages/PackageManager.js';
+import DomRegistry from './dom/DomRegistry.js'; // Optional: for asset mounting later
+
+export class BootStrap {
+    /**
+     * @param {Net} net - Networking layer (must provide .http, .batch, etc.)
+     * @param {Object} options - Boot configuration
+     * @param {Object} [options.repo={}] - Initial repo configuration
+     */
+    constructor(net, { repo = {} } = {}) {
+        if (!net) {
+            throw new Error("BootStrap requires a valid Net instance");
+        }
+
+        this.net = net;
+
+        this.repo = new Repo(net, repo);
+        this.packages = new PackageManager(net, this.repo);
+        this.dom = new DomRegistry(); // Optional: mount DOM assets like HTML/CSS
+    }
+
+    /**
+     * Load and initialize a scene by symbolic name or inline package object.
+     * 
+     * @param {string|object} def - Package ID or direct package object
+     * @param {object} [options] - Additional loading options (e.g., { repo: [...] })
+     * @returns {Promise<boolean>} - Resolves true if successful, false on failure
+     */
+    async loadScene(def, options = {}) {
+        const pkg = await this.packages.resolve(def, options);
+        if (!pkg) return false;
+
+        const success = await this.packages.load(pkg);
+        if (!success) return false;
+
+        // Future hooks: mount DOM, init logic, dependency graph, etc.
+        // await this.dom.mount(pkg); // optional future call
+        // await this._runLifecycle(pkg);
+
+        return true;
+    }
+
+    /**
+     * Get a loaded asset or module by ID.
+     * 
+     * @param {string} id 
+     * @returns {*} loaded asset or module reference
+     */
+    get(id) {
+        return (
+            this.packages.getAsset(id) ||
+            this.packages.getModule(id) ||
+            null
+        );
+    }
+
+    /**
+     * List all loaded packages.
+     * @returns {string[]}
+     */
+    listPackages() {
+        return this.packages.list();
+    }
+
+    /**
+     * Reset internal state (packages, assets, modules, etc.)
+     */
+    reset() {
+        this.packages.reset();
+        this.dom.reset?.();
+    }
+}
+
+export default BootStrap;

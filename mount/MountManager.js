@@ -1,0 +1,40 @@
+export class MountManager {
+    constructor(bootstrap) {
+        this.bootstrap = bootstrap;
+    }
+
+    /**
+     * Executes the mount handler with the resolved package.
+     * @param {Function|Promise<Function>} mountFn - A function or promise returning one
+     * @param {Object} pkg - The loaded package definition
+     * @param {Object} args - Optional runtime arguments
+     */
+
+    async load(instructions, pkg, mountFn) {
+
+	if (typeof mountFn === 'function') {
+            return await mountFn(instructions, pkg, this.bootstrap);
+	}
+	
+	console.warn("[MountManager] Invalid or missing mount handler.");
+	return false;
+    }
+    
+    /*
+    async load(mountFn, pkg, args = {}) {
+        let handler = mountFn;
+        if (typeof mountFn === 'function' && mountFn.constructor.name === 'AsyncFunction') {
+            handler = await mountFn();
+        }
+
+        if (typeof handler === 'function') {
+            return await handler(pkg, this.bootstrap, args);
+        }
+
+        console.warn("[MountManager] Invalid or missing mount handler.");
+        return false;
+    }*/
+}
+
+export default MountManager;
+
