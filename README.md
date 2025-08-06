@@ -1,71 +1,71 @@
-# m7Fetch 
+# M7BootStrap
 
-**m7Fetch** is a dynamic, modular network toolkit for modern JavaScript environments.  
-It provides a clean, extensible interface for loading specs, APIs, and dynamic modules at runtime — all wrapped in a developer-friendly architecture that minimizes boilerplate and promotes flexible usage.
+**M7BootStrap** is a modular initialization and mounting toolkit designed for dynamic, simulation-oriented environments.  
+It provides a clean and extensible framework for setting up runtime assets, modules, and logic — with an emphasis on composability, clarity, and long-term maintainability.
 
-> JavaScript is dynamic — stop trying to collar it like C.  
-> If I wanted concrete, I’d use WASM.  
-> _(But if you **are** into concrete, check out [Siglatch](https://github.com/linearblade/siglatch) — production-ready, written in C, and extremely useful!)_
+> Don’t waste cycles building loaders to load loaders.
+> Let BootStrap do the groundwork — and get out of the way.
+> _(Looking for low-level access control instead? Check out [Siglatch](https://github.com/linearblade/siglatch) — battle-tested and written in C.)_
 
 ---
 
 ## 🔧 Purpose
 
-Originally derived from the author's legacy **M7 bootstrapper frameworks** (built over 20 years ago), **m7Fetch** is a modernized, production-ready rework — built to serve dynamic apps, toolchains, and in-browser tasks with minimal setup.
+Originally derived from the author's 2000s-era **bootloader frameworks**, **M7BootStrap** is a refactored and modernized runtime initializer for simulation engines, editors, and modular applications.
 
-Its design favors:
+Its primary role is to coordinate:
 
-- Rapid prototyping with structured API access
-- Declarative API usage through OpenAPI or custom specs
-- Flexible module injection (local or remote)
-- Dynamic loading of manifests, assets, and operations
-- Headless or console-based automation (yes, even from browser devtools)
+- Asset and module staging
+- Post-load mounting and integration
+- Configurable system wiring
+- Minimal-assumption boot pipelines
+
+Designed to work in tandem with [m7Fetch](https://github.com/linearblade/m7fetch) or standalone, M7BootStrap provides the glue between loading and logic.
 
 ---
 
 ## ⚡️ Features
 
-- ✅ Unified interface for HTTP, module loading, and spec handling
-- 📄 Support for OpenAPI and custom API specs
-- 📦 ES module dynamic imports with runtime wiring
-- 🧠 AutoLoader intelligently infers spec type and fetches accordingly
-- 🕹️ SpecManager handles multiple APIs at once, via operationId-based routing
-- 🔁 BatchLoader runs multiple HTTP jobs and emits completion
+- ✅ Structured boot sequence coordination
+- 🧩 Modular mount/unmount lifecycle handlers
+- 📁 Runtime asset registration and integration
+- 🔄 Customizable stage flow (boot → mount → start → etc.)
+- 🔌 Interoperable with dynamic module loaders like `m7Fetch`
+- 🧼 Game-agnostic by design — no assumptions about use case or structure
 
 ---
 
 ## 📦 Usage
 
 ```js
-import Net from 'm7Fetch';
+import BootStrap from 'M7BootStrap';
 
-const net = new Net();
+// create a new boot coordinator
+const boot = new BootStrap();
 
-// Load an OpenAPI spec
-await net.specs.load('/specs/dogs.json');
+// register a module to mount after boot
+boot.mount('settings', async () => {
+  const settings = await fetch('/config/settings.json').then(r => r.json());
+  return settings;
+});
 
-// Call an operation via spec
-const dogList = await net.specs.call('dogAPI', 'listDogs');
+// run the bootstrapper
+await boot.run();
 
-// Dynamically load a module
-const mod = await net.modules.load('mytool', '/tools/helper.js');
-mod.doThing();
-
-//load some stuff:
-data = await net.http.get('/foo/bar');
-more = await net.http.post('/some/post', {a:1,b:2}, {urlencoded: true} )
+// access mounted module later
+console.log(boot.modules.settings);
 ```
 
 ---
 
 ## 🚧 Status
 
-This project is **actively maintained**, with its **core modules production-ready**.
+This project is **under active development**.  
+Core lifecycle phases (`boot`, `mount`, `start`) are implemented and stable, with extended features (mount chaining, diagnostics, plugin hooks) currently being developed.
 
-Further extensions (like advanced batching, plugin systems, or custom spec types) are in planning or prototype stage.
+Public release will follow once internal systems are fully integrated.
 
 ---
-
 
 ## 📜 License
 
@@ -78,14 +78,14 @@ Commercial licensing available under M7 Moderate Team License (MTL-10).
 ## 🤖 AI Usage Disclosure
 
 See [`docs/AI_DISCLOSURE.md`](docs/AI_DISCLOSURE.md) and [`docs/USE_POLICY.md`](docs/USE_POLICY.md)  
-for details on permitted AI usage and operational security boundaries.
+for permitted use of AI in derivative tools or automation layers.
 
 ---
 
 ## 🛠️ Philosophy
 
-> “Fewer assumptions. More control.”  
-> m7Fetch prefers _explicit_ behavior and composability over frameworks that abstract away too much.
+> “Initialize only what you mean to use.”  
+> BootStrap avoids premature assumptions and allows precise control over app lifecycle stages.
 
 ---
 
