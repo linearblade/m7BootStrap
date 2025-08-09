@@ -10,7 +10,7 @@ It provides a clean, extensible framework for resolving package dependencies, st
 > 
 > This project is currently under active development, and documentation is still being written.
 > Some features may be undocumented or subject to change.  
-> Please check back soon as we continue to update this repository.> _(Looking for low-level access control instead? Check out [Siglatch](https://github.com/linearblade/siglatch) — battle-tested and written in C.)_
+> Please check back soon as we continue to update this repository.
 
 ---
 
@@ -133,9 +133,11 @@ See [`LICENSE.md`](LICENSE.md) for full terms.
 Free for personal, non-commercial use.  
 Commercial licensing available under the M7 Moderate Team License (MTL-10).
 
-💼 **Integration & Support**  
+## 💼 **Integration & Support**
+
 If you’re interested in using M7BootStrap in a commercial project or need assistance with integration,  
 support contracts and consulting are available. Contact [legal@m7.org](mailto:legal@m7.org) for details.
+
 ---
 
 ## 🤖 AI Usage Disclosure
