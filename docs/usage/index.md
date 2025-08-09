@@ -2,19 +2,19 @@
 
 # 📘 Usage Guide — Table of Contents
 
-## 1. [Introduction & Requirements](usage/INTRODUCTION.md)
+## 1. [Introduction & Requirements](INTRODUCTION.md)
 
-## 2. [Installation](usage/INSTALLATION.md)
+## 2. [Installation](INSTALLATION.md)
 
-## 3. [Basic Concepts](usage/BASIC_CONCEPTS.md)
+## 3. [Basic Concepts](BASIC_CONCEPTS.md)
 
-## 4. [Quick Start](usage/QUICK_START.md)
+## 4. [Quick Start](QUICK_START.md)
 
-## 5. [Core API Overview](usage/CORE_API_OVERVIEW.md)
+## 5. [Core API Overview](CORE_API_OVERVIEW.md)
 
-## 6. [Loading Packages](usage/LOADING_PACKAGES.md)
+## 6. [Loading Packages](LOADING_PACKAGES.md)
 
-## 7. [Package & Repo Specifications](usage/PACKAGE_SPECIFICATIONS.md)
+## 7. [Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)
 
 * packageResource
 * packageResourceObject
@@ -25,16 +25,16 @@
 * Relationship diagram
 * Validation notes / required fields
 
-## 8. [Hooks & Handlers](usage/HOOKS_AND_HANDLERS.md)
+## 8. [Hooks & Handlers](HOOKS_AND_HANDLERS.md)
 
-## 9. [Unmounting Packages](usage/UNMOUNTING_PACKAGES.md)
+## 9. [Unmounting Packages](UNMOUNTING_PACKAGES.md)
 
-## 10. [Advanced Usage](usage/ADVANCED_USAGE.md)
+## 10. [Advanced Usage](ADVANCED_USAGE.md)
 
-## 11. [Performance Considerations](usage/PERFORMANCE.md)
+## 11. [Performance Considerations](PERFORMANCE.md)
 
-## 12. [Troubleshooting](usage/TROUBLESHOOTING.md)
+## 12. [Troubleshooting](TROUBLESHOOTING.md)
 
-## 13. [Examples Library](usage/EXAMPLES_LIBRARY.md)
+## 13. [Examples Library](EXAMPLES_LIBRARY.md)
 
-## 14. [Glossary](usage/GLOSSARY.md)
+## 14. [Glossary](GLOSSARY.md)
