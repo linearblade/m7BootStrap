@@ -38,7 +38,15 @@ Because it’s implemented entirely in JavaScript, it works with any backend and
 
 ## 📦 Usage
 
-Requires **m7Fetch** for HTTP/module loading.
+Requires **[m7Fetch](https://github.com/linearblade/m7Fetch)** for HTTP/module loading.
+
+---
+
+### 📚 Full Guide
+m7Bootstrap is relatively easy to use, however for advanced users there are a lot of options.
+For complete usage examples, package schema details, handler resolution rules, and advanced integration patterns, see:
+
+**[Full Usage Guide →](docs/usage/index.md)**
 
 ---
 
@@ -85,12 +93,6 @@ await bootstrap.unload(
 );
 ```
 
----
-
-### 📚 Full Guide
-
-For complete usage examples, package schema details, handler resolution rules, and advanced integration patterns, see:
-**[Full Usage Guide →](docs/USAGE.md)**
 
 ---
 
