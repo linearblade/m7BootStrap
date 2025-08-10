@@ -60,12 +60,12 @@ const opts = {
 // Handlers
 const onLoad = [
   "#mount.load", // symbolic reference to a bootstrapper method
-  (sys, ctx) => console.log("Loaded packages:", ctx.results)
+  (sys, ctx) => console.log("Loaded packages:", ctx)
 ];
 
 const onError = [
   "logFailure",
-  (sys, ctx) => console.warn("Failed to load:", ctx.failed, ctx.err)
+  (sys, ctx) => console.warn("Failed to load:", ctx)
 ];
 
 // Load the package(s)
@@ -106,5 +106,5 @@ If you copied modules elsewhere, you’ll need to remove them manually.
 
 ## Next Steps
 
-* Learn how to configure resources and repos in detail: **Package & Repo Specifications**
-* Explore the full set of lifecycle hooks and event handlers: **Hooks & Handlers**
+* Learn how to configure resources and repos in detail: **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**
+* Explore the full set of lifecycle hooks and event handlers: **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**

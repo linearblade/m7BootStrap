@@ -32,7 +32,7 @@ It can take several forms:
 
 ---
 
-## 3. Repositories (Repos)
+## 3. Repositories (Repos, or Repo Resource)
 
 A **repo** tells M7BootStrap *where* to fetch packages from.
 
@@ -51,7 +51,7 @@ When you call `bootstrap.load(...)`, M7BootStrap:
 3. **Loads assets** into internal registries.
 4. **Loads modules** into the bootstrapper’s module store.
 5. **Runs hooks** (if enabled).
-6. **Invokes your onLoad/onError handlers**.
+6. **Invokes your onLoad/onError handlers, including builtin mount/unmount handling, if invoked**.
 
 ---
 
@@ -74,7 +74,8 @@ Handlers let *you* react to load/unload events with your own code.
 Handlers can be:
 - A direct function.
 - A string name (global or symbolic).
-- A bound method reference (`"#mount.load"`).
+- A bound method reference (`"#mount.load"`, "~module.start", "@pkg:module.start","something_in_global_namespace").
+
 
 ---
 
