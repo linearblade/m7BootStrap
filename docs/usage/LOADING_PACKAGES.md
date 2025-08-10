@@ -26,15 +26,39 @@ const ok = await bootstrap.load(resources, onLoad?, onFail?, options?);
 
 ## Options
 
-Options are passed as the fourth argument:
+Options are passed as the fourth argument to `load()`. All provided options are also passed to any handlers executed, and can be accessed inside the `ctx` variable. You may define your own namespace within the `options` object for this purpose.
 
 ```js
 {
-  package: {
-    hooks: true  // Run each package's `run` hooks after load (default: true)
+  hooks: true,
+  limit: 8, // max concurrent requests (default 8)
+
+  repo: { // repo options
+    circuitbreaker: 100, // max dependency lookups before abort (default 100)
+    limit: 8              // concurrency for repo fetches (default: parent `limit` or 8)
+  },
+
+  package: { // package load options
+    // Only `hooks` is used at present (exposed at top-level for convenience).
+    // Reserved for future package-level options.
+  },
+
+  assets: {
+    limit: 8 // concurrency for asset fetches (default: parent `limit` or 8)
   }
 }
 ```
+
+**Fields**
+
+| Path                  | Type    | Default | Notes                                                                                        |
+| --------------------- | ------- | ------- | -------------------------------------------------------------------------------------------- |
+| `hooks`               | boolean | `true`  | Run each package’s `run` hooks after load. Exposed at top level for convenience.             |
+| `limit`               | integer | `8`     | Global concurrency cap for parallel loads.                                                   |
+| `repo.circuitbreaker` | integer | `100`   | Safety cutoff for runaway or circular dependency traversal.                                  |
+| `repo.limit`          | integer | `limit` | Concurrency limit for repo requests; falls back to the parent `limit`.                       |
+| `package`             | object  | `{}`    | Reserved for future package-specific options. Currently unused beyond the top-level `hooks`. |
+| `assets.limit`        | integer | `limit` | Concurrency limit for asset fetches; falls back to the parent `limit`.                       |
 
 ---
 
@@ -52,7 +76,7 @@ See **Package & Repo Specifications** for full format details.
 
 ## Function Resource Arguments in Handlers
 
-The `onLoad` and `onFail` parameters accept **function resource arguments**, which are normalized into [`functionResourceObject`](PACKAGE_SPECIFICATIONS.md#4-functionresourceobject) form.
+The `onLoad` and `onFail` parameters accept **function resource arguments**, which are normalized into [`functionResourceObject`](PACKAGE_SPECIFICATIONS.md#functionresourceobject) form.
 
 A function resource argument can be:
 
@@ -75,7 +99,7 @@ const onLoad = [
 ];
 ```
 
-See **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)** for handler execution details.
+See **Hooks & Handlers** for handler execution details.
 
 ---
 
@@ -164,6 +188,38 @@ await bootstrap.load({
 ### Symbolic Resources
 
 Symbolic strings like `"scene:chess"` are resolved through your repo configuration and network layer.
+
+## Unload
+
+The `unload()` method removes one or more packages by ID or definition.
+
+```ts
+async unload(
+  resources: string | object | Array<string | object>,
+  onDone?: Function | Function[] | string | string[] | object | object[] | null,
+  onError?: Function | Function[] | string | string[] | object | object[] | null,
+  options?: {
+    ignoreMissing?: boolean,
+    cascade?: boolean,
+    keepAssets?: boolean,
+    keepModules?: boolean,
+    // ...custom
+  }
+): Promise<boolean>
+```
+
+**Options**
+
+| Option          | Type    | Default | Status          | Description                                              |
+| --------------- | ------- | ------- | --------------- | -------------------------------------------------------- |
+| `ignoreMissing` | boolean | `true`  | *unimplemented* | Ignore missing packages and continue.                    |
+| `cascade`       | boolean | `false` | *unimplemented* | Remove dependencies as well as the specified packages.   |
+| `keepAssets`    | boolean | `false` | implemented     | Keep assets mounted/registered instead of removing them. |
+| `keepModules`   | boolean | `false` | implemented     | Keep modules registered instead of clearing them.        |
+
+> If you wish to unmount assets, include `"#mount.unload"` in the `onDone` handler list (as a `functionResourceObject`).
+
+As with `load()`, all provided `options` are also passed to any handlers executed, and can be accessed inside the `ctx` variable.
 
 ---
 
