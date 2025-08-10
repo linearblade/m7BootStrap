@@ -156,6 +156,6 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 
 **Related Topics:**
 
-* **Loading Packages**
-* **Hooks & Handlers**
-* **Performance Considerations**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
+* **[Performance Considerations](PERFORMANCE.md)**

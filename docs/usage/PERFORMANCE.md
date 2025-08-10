@@ -100,6 +100,6 @@ Prefer URLs for large assets instead of embedding them.
 
 **Related Topics:**
 
-* **Advanced Usage**
-* **Loading Packages**
-* **Hooks & Handlers**
+* **[Advanced Usage](ADVANCED_USAGE.md)**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**

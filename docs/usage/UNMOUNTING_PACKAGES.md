@@ -91,5 +91,5 @@ await bootstrap.unload(
 
 **Related Topics:**
 
-* **Loading Packages**
-* **Hooks & Handlers**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**

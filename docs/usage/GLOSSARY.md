@@ -115,6 +115,6 @@ A short identifier (e.g., `"scene:chess"`) that is resolved via repo settings or
 
 **See Also:**
 
-* **Loading Packages**
-* **Hooks & Handlers**
-* **Package & Repo Specifications**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
+* **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**

@@ -137,6 +137,6 @@ console.log("Dependency Graph:", graph);
 
 **See Also:**
 
-* **Loading Packages**
-* **Hooks & Handlers**
-* **Troubleshooting**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
+* **[Troubleshooting](TROUBLESHOOTING.md)**

@@ -138,6 +138,6 @@ await bootstrap.load(["scene:3dworld"], onLoad);
 
 **Related Topics:**
 
-* **Loading Packages**
-* **Package & Repo Specifications**
-* **Hooks & Handlers**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**

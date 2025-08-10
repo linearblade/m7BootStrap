@@ -96,5 +96,5 @@ await bootstrap.unload(
 
 **Related Topics:**
 
-* **Loading Packages**
-* **Unmounting Packages**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
