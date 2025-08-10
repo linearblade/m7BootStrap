@@ -43,15 +43,17 @@ import { createLimiter } from "./utils/limiter.js";
 const limit = createLimiter(8); // max 8 concurrent requests
 await Promise.all(resources.map(r => limit(() => bootstrap.load([r]))));
 ```
-or use built in parallelism
+
+Or use built in parallelism:
 bootstrap.load(resources, onload,onerror, {limit:8});
+
 ---
 
 ## 3. Caching
 
 Leverage caching at multiple levels:
 
-* **m7Fetch** built-in cache (via net.batch)
+* **[m7Fetch](https://github.com/linearblade/m7Fetch)** built-in cache (via net.batch)
 * HTTP caching via `Cache-Control` headers
 * In-memory registries (e.g., keeping package definitions around after first load)
 
