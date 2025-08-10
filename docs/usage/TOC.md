@@ -19,6 +19,7 @@
 * packageResource
 * packageResourceObject
 * repoResource
+* functionResourceObject
 * Inline package structure
 * Examples of each form (string, object, inline)
 * Resolution rules
