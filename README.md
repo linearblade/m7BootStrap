@@ -33,6 +33,7 @@ Because it’s implemented entirely in JavaScript, it works with any backend and
 - 🧩 **Modular mount/unmount handlers** — easily add or remove runtime components.
 - 🗂️ **Runtime asset registry** — track and reference loaded resources without manual bookkeeping.
 - 🌐 **Backend-agnostic** — works with any server or CDN; no special backend setup required.
+
 ---
 
 
@@ -46,7 +47,7 @@ Requires **[m7Fetch](https://github.com/linearblade/m7Fetch)** for HTTP/module l
 m7Bootstrap is relatively easy to use, however for advanced users there are a lot of options.
 For complete usage examples, package schema details, handler resolution rules, and advanced integration patterns, see:
 
-**[Full Usage Guide →](docs/usage/index.md)**
+**[Full Usage Guide →](docs/usage/TOC.md)**
 
 ---
 
