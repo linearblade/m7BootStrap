@@ -19,6 +19,10 @@ await Promise.all(
   resources.map(res => limit(() => bootstrap.load([res])))
 );
 ```
+bootstrap.load ALSO provides for built in concurrency limiting
+```
+bootstrap.load(resources,onload,onerror, {limit:8})
+```
 
 > **Tip:** Parallelization is especially useful for large asset bundles where dependency order is not critical.
 
@@ -26,8 +30,9 @@ await Promise.all(
 
 ## 2. Custom Repository Resolvers
 
-By default, package resolution uses **m7Fetch** for HTTP/module loading.
-You can override `.repo.resolve()` to handle:
+By default, package resolution uses **m7Fetch** for HTTP/module loading. this can be highly customized.
+
+However, you can override `.repo.resolve()` to handle or buildDependencyGraph if more customization is required than it provides:
 
 * Authentication
 * Caching
@@ -72,7 +77,8 @@ await bootstrap.load([inlinePackage]);
 
 ```js
 const resources = [
-  "scene:chess",                                    // symbolic
+  "scene/chess.json",                               //straight url ref
+  "scene:chess",                                    // symbolic, same as above but shorthand
   { resource: "scene:checkers", repo: ["/repo"] },  // repo-wrapped
   inlinePackage                                      // inline
 ];
@@ -85,11 +91,12 @@ await bootstrap.load(resources);
 ## 5. Using Post-Load Hooks for Integration
 
 Since parallel loading may not respect dependency order, you can integrate all packages after loading:
-
+note: ctx format is subject to change refer to  [Hooks and handlers](HOOKS_AND_HANDLERS.md) for the current specification for your version
 ```js
 const onLoad = [
   "#mount.load",
   (sys, ctx) => {
+
     ctx.results.forEach(pkg => {
       if (pkg.modules.gameLogic) {
         attachToGame(pkg.modules.gameLogic);

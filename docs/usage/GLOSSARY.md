@@ -8,7 +8,10 @@ A reference for key terms and concepts used in **M7BootStrap** and related syste
 
 ## **Asset**
 
-Any non-code resource (e.g., images, audio, JSON data) that a package declares and can be mounted into the runtime environment.
+Any resource declared by a package that can be loaded into the bootstrapper and optionally mounted into the runtime environment.
+
+Assets can be non-code (e.g., images, audio, JSON data, stylesheets) or code-based (e.g., JavaScript files, modules, CSS).
+These are generally inline objects or external resources intended to be injected into the DOM tree.
 
 ---
 
@@ -54,6 +57,13 @@ A package whose definition is included directly in JavaScript as an object (rath
 
 ---
 
+## **Load**
+
+The process of retrieving a package (and its dependencies) into the bootstrapper’s internal registries.
+This may involve downloading assets, loading modules, and storing metadata, but does not automatically integrate them into the runtime environment.
+
+---
+
 ## **Module**
 
 A JavaScript module or script loaded by a package.
@@ -63,7 +73,7 @@ Modules may expose functions or classes used by your runtime.
 
 ## **Mount**
 
-The process of integrating loaded assets/modules into the active runtime environment (e.g., injecting HTML assets into the DOM).
+The process of integrating previously loaded assets/modules into the active runtime environment — for example, injecting HTML/CSS into the DOM or binding modules to live systems.
 
 ---
 
@@ -77,13 +87,14 @@ May contain assets, modules, dependencies, and run hooks.
 ## **packageResource**
 
 The normalized form of a package reference (string, object, or inline) used by the loader.
-See **Package & Repo Specifications**.
+See **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**.
 
 ---
 
 ## **Repo Resource**
 
 A definition of where and how to fetch a package (URL, HTTP method, optional POST data, etc.).
+See **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**.
 
 ---
 
@@ -93,11 +104,18 @@ A special hook in a package’s definition that is executed after loading.
 Often used for initialization logic.
 
 ---
+## **Unload**
+
+The process of removing a package from the bootstrapper’s internal registries, clearing its modules and asset references from memory.
+Does not necessarily remove already-mounted elements from the runtime environment.
+
+---
 
 ## **Unmount**
 
-The process of removing a package’s assets/modules from the runtime environment.
-Can optionally clear related caches and registry entries.
+The process of removing a package’s assets/modules from the active runtime environment.
+May also trigger cleanup of associated caches, DOM elements, or event bindings.
+Does not necessarily unload the package from the bootstrapper.
 
 ---
 

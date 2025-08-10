@@ -22,8 +22,8 @@ const resources = [
 
 const success = await bootstrap.load(
   resources,
-  (sys, ctx) => console.log("Loaded:", ctx.results),
-  (sys, ctx) => console.error("Error:", ctx.failed, ctx.err)
+  (sys, ctx) => console.log("Loaded:", ctx),
+  (sys, ctx) => console.error("Error:", ctx)
 );
 
 if (!success) {
@@ -65,7 +65,7 @@ const onLoad = [
 ];
 
 const onError = [
-  (sys, ctx) => console.error(`Failed to load: ${ctx.failed.id}`, ctx.err)
+  (sys, ctx) => console.error(`Failed to load:`  ctx)
 ];
 
 await bootstrap.load(resources, onLoad, onError);
@@ -107,7 +107,7 @@ const resources = [
   "@resources.hamsterUtils"
 ];
 
-await bootstrap.load(resources, "#mount.load", "#mount.error");
+await bootstrap.load(resources, "#mount.load", "globally_scoped_function");
 ```
 
 ---

@@ -18,6 +18,10 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 * Incorrect package ID or symbolic name
 * Missing or misconfigured `repo` field
 * Repo server not reachable
+* Repo hosted on a different domain without proper credentials configuration
+* Package retrieved is invalid or incorrectly formatted JSON
+* Repo requires special configuration (e.g., credentials, HTTP method, or POST data for keys)
+* Multiple repos configured but not all properly set up
 
 **Solutions:**
 
@@ -28,6 +32,10 @@ This section covers common issues you may encounter when using **M7BootStrap** a
   ```
 * Check that your repo server is online and accessible.
 * If symbolic names are used (e.g., `@resources.pkgname`), confirm your resolver is set up.
+* If your repo is not hosted on the same domain as the page loading it, configure the `net` instance to send appropriate credentials. See **m7Fetch** documentation for configuration.
+* If the retrieved package is incorrectly formatted JSON, check the console for parsing errors and fix the source package.
+* If your repo requires special considerations (e.g., credentials, HTTP method, POST data for API keys), configure the repo accordingly. See **Package & Repo Specifications**.
+* If you have multiple repos, they will be tried in order. Ensure all repos are properly configured and reachable.
 
 ---
 
@@ -57,7 +65,7 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 
 ## 3. Hooks Not Triggering
 
-**Symptoms:**
+*Symptoms:**
 
 * `onLoad` or `onError` handlers do not run.
 
@@ -65,6 +73,7 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 
 * Hook references are incorrect.
 * Using a string reference that doesn’t match a registered handler.
+* Using symbolic reference types incorrectly (see **Hooks & Handlers** for details).
 
 **Solutions:**
 
@@ -74,6 +83,12 @@ This section covers common issues you may encounter when using **M7BootStrap** a
   const onLoad = (sys, ctx) => console.log("Loaded:", ctx.results);
   ```
 * Verify symbolic/local handler references exist in the expected scope.
+* For symbolic reference types:
+
+  * `~module.function` or `~function` — Used specifically during the **load phase for that package**, references `thisPackage.module.function`. Not valid for general `onLoad` or error handlers.
+  * `@somePackage:module.function` — References a module function in a package loaded into the bootstrapper.
+  * `#mount.load` or `#mount.unload` — Calls bootstrapper methods, primarily for mounting/unmounting operations (no argument support currently).
+  * Invalid function resources — Functions must be direct, symbolic, or a resource object (see **Package & Repo Specifications**).
 
 ---
 
@@ -142,7 +157,7 @@ This section covers common issues you may encounter when using **M7BootStrap** a
   ```
 * Use absolute URLs for remote repos.
 * Configure CORS on the repo server if needed.
-
+* See **m7Fetch** for client-side configuration, and ensure no base directory is set for it — or set `fetchOpts: { absolute: true }` in the repo config if needed.
 ---
 
 ## 7. Debugging Tips

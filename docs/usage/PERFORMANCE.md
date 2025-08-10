@@ -19,7 +19,7 @@ Parallel loading does **not** guarantee dependency order. If strict load order i
 ```js
 const onLoad = [
   "#mount.load",
-  (sys, ctx) => integrateDependencies(ctx.results)
+  (sys, ctx) => integrateDependencies(sys,ctx)
 ];
 
 await bootstrap.load(resources, onLoad);
@@ -43,14 +43,15 @@ import { createLimiter } from "./utils/limiter.js";
 const limit = createLimiter(8); // max 8 concurrent requests
 await Promise.all(resources.map(r => limit(() => bootstrap.load([r]))));
 ```
-
+or use built in parallelism
+bootstrap.load(resources, onload,onerror, {limit:8});
 ---
 
 ## 3. Caching
 
 Leverage caching at multiple levels:
 
-* **m7Fetch** built-in cache (if enabled)
+* **m7Fetch** built-in cache (via net.batch)
 * HTTP caching via `Cache-Control` headers
 * In-memory registries (e.g., keeping package definitions around after first load)
 
