@@ -161,6 +161,6 @@ packageResource
 
 **See Also**
 
-* **Loading Packages**
-* **Unmounting Packages**
-* **Hooks & Handlers**
+* **[Loading Packages](LOADING_PACKAGES.md)**
+* **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
+* Continue to **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)** to action on your loads and unloads
