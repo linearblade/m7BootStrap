@@ -1,9 +1,11 @@
-← Back to [Usage Guide Index](TOC.md)
+← Back to [Usage Guide Index](index.md)
 
 # 🔗 Hooks & Handlers
 
 Hooks and handlers let you inject custom logic into the package lifecycle.
 They run **after packages load or fail** and can be used to mount assets, integrate modules, trigger UI changes, or clean up resources.
+
+> **Tip — Automated Mounter:** When **loading**, include `"#mount.load"` in your `onLoad` handlers to auto‑mount HTML assets. When **unloading**, include `"#mount.unload"` in `onDone` to unmount. These are bootstrapper-local methods intended for mounting/teardown.
 
 ---
 
@@ -11,12 +13,14 @@ They run **after packages load or fail** and can be used to mount assets, integr
 
 A handler can be **any** of the following:
 
-| Type                          | Example                                       | Description                                            |
-| ----------------------------- | --------------------------------------------- | ------------------------------------------------------ |
-| **Function**                  | `(sys, ctx) => { console.log(ctx.results); }` | Direct function callback with system and context args. |
-| **Global function name**      | `"myGlobalFn"`                                | Resolved from the global scope.                        |
-| **Symbolic module reference** | `"@pkg.module.fn"`                            | Calls the `fn` export of `pkg.module` if it’s loaded.  |
-| **Local bootstrap method**    | `"#mount.load"`                               | Calls a method on the current `BootStrap` instance.    |
+| Type                          | Example                                       | Description                                                                                                                                                 |
+| ----------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Function**                  | `(sys, ctx) => { console.log(ctx.results); }` | Direct function callback with system and context args.                                                                                                      |
+| **Global function name**      | `"myGlobalFn"`                                | Resolved from the global scope.                                                                                                                             |
+| **Symbolic module reference** | `"@pkg.module.fn"`                            | Calls the `fn` export of `pkg.module` from a loaded package.                                                                                                |
+| **Package‑local reference**   | `"~module.fn"`, `"~fn"`                       | Valid **only during that package's load phase**; resolves within the loading package. Not valid for general `onLoad`/`onError` that run after all packages. |
+| **Local bootstrap method**    | `"#mount.load"`, `"#mount.unload"`            | Calls a method on the current `BootStrap` instance. (Argument passing not supported.)                                                                       |
+| **functionResourceObject**    | `{ fn: "@pkg.module.fn", bind: true }`        | Structured form that normalizes any handler input; see **Function Resource Objects** below.                                                                 |
 
 ---
 
@@ -27,25 +31,54 @@ Handlers always receive `(sys, ctx)` arguments:
 * **`sys`** — The calling system instance (e.g., `bootstrap`)
 * **`ctx`** — An object with fields:
 
-| Field     | Type   | Description                                     |
-| --------- | ------ | ----------------------------------------------- |
-| `results` | array  | Successfully loaded package definitions         |
-| `failed`  | object | The package that failed (if any)                |
-| `options` | object | Loader options passed to `load()`               |
-| `err`     | Error  | Error object if failure was due to an exception |
+| Field     | Type   | Description                                                                                           |
+| --------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| `results` | array  | Successfully loaded/unloaded package definitions                                                      |
+| `failed`  | object | The package that failed (if any)                                                                      |
+| `options` | object | The full options object passed to `load()`/`unload()` (you may define your own namespace inside here) |
+| `err`     | Error  | Error object if failure was due to an exception                                                       |
+
+---
+
+## Function Resource Objects
+
+Handlers passed to `load()`/`unload()` can be strings, functions, or structured objects. Internally, they are normalized into a **functionResourceObject** so the runtime can process them consistently.
+
+**What it is:** a normalized object with at least `{ fn, bind, original }`, and flags for how the reference should be resolved.
+
+**Prefixes & meaning:**
+
+* `@` — **Symbolic module reference** in a loaded package, e.g. `"@ui.toast.show"` → `ui.toast.show` export.
+* `~` — **Package‑local** reference (valid only during that package’s load phase), e.g. `"~setup"`, `"~module.init"`.
+* `#` — **Bootstrapper‑local** method, e.g. `"#mount.load"`, `"#mount.unload"`.
+* *(none)* — Global function name or direct function reference.
+
+**Examples (conceptual):**
+
+```js
+"@foo.bar"           // → { fn: "foo.bar", symbolic: true, bind: false, original: "@foo.bar" }
+"myFunc"             // → { fn: "myFunc", symbolic: false, bind: false, original: "myFunc" }
+() => {}              // → { fn: [Function], bind: false, original: "anonymous" }
+{ fn: "@pkg.fn", bind: true }
+// → { fn: "pkg.fn", symbolic: true, bind: true, original: "@pkg.fn" }
+```
+
+See [`functionResourceObject`](PACKAGE_SPECIFICATIONS.md#functionresourceobject). for the full schema and normalization rules.
 
 ---
 
 ## Attaching Handlers
 
-You attach handlers when calling `.load()` or `.unload()`:
+Attach handlers when calling `.load()` or `.unload()`:
 
 ```js
-const onLoad  = ["#mount.load", (sys, ctx) => console.log("Loaded:", ctx.results)];
+const onLoad  = ["#mount.load", "@ui.notify.loaded", (sys, ctx) => console.log("Loaded:", ctx.results)];
 const onError = ["jobFail", (sys, ctx) => console.warn("Failed:", ctx.failed)];
 
 await bootstrap.load(resources, onLoad, onError);
 ```
+
+> **Note:** Because `~` package‑local references only resolve during the specific package’s load phase, avoid using them in global `onLoad` arrays that execute after all packages complete.
 
 ---
 
@@ -57,6 +90,7 @@ You can provide arrays of handlers — they will run in order:
 const onLoad = [
   "#mount.load",
   "@ui.notify.loadComplete",
+  { fn: "@telemetry.log", bind: true, meta: { level: "info" } },
   (sys, ctx) => { console.log("Custom post-load", ctx); }
 ];
 ```
@@ -65,12 +99,12 @@ const onLoad = [
 
 ## Using Handlers with Unload
 
-The same system applies for `.unload()`:
+Same system for `.unload()`:
 
 ```js
 await bootstrap.unload(
   ["scene:chess"],          // packages to unload
-  ["#mount.unload"],        // onDone handlers
+  ["#mount.unload"],        // onDone handlers (unmount assets via automated mounter)
   ["jobFail"],              // onError handlers
   { ignoreMissing: true }
 );
@@ -87,10 +121,11 @@ await bootstrap.unload(
 
 ## Best Practices
 
-* Keep handlers small — complex operations should delegate to dedicated modules.
-* Use symbolic refs for modules so they’re automatically resolved from loaded packages.
-* Avoid hard-coded package IDs unless the package is guaranteed to be present.
-* Leverage post-load hooks to integrate with your app without blocking parallel loading.
+* Keep handlers small — delegate complex work to dedicated modules.
+* Prefer **symbolic `@` refs** so functions resolve automatically from loaded packages.
+* Use `~` only for **package‑local load‑time hooks**; avoid in global `onLoad`.
+* Include `"#mount.load"`/`"#mount.unload"` if you want the automated mounter to mount/unmount assets.
+* Remember: your `options` object is passed to handlers as `ctx.options`; you can namespace custom data there (e.g., `options.ui`, `options.telemetry`).
 
 ---
 
@@ -98,3 +133,4 @@ await bootstrap.unload(
 
 * **[Loading Packages](LOADING_PACKAGES.md)**
 * **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
+* **[Package & Repo Specifications → functionResourceObject](PACKAGE_SPECIFICATIONS.md#functionresourceobject)**
