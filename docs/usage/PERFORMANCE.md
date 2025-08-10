@@ -45,7 +45,9 @@ await Promise.all(resources.map(r => limit(() => bootstrap.load([r]))));
 ```
 
 Or use built in parallelism:
+```js
 bootstrap.load(resources, onload,onerror, {limit:8});
+```
 
 ---
 
