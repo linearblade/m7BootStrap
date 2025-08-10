@@ -70,7 +70,48 @@ A `repoResource` describes **where and how** to fetch a package.
 
 ---
 
-## 4. Inline Package Structure
+## 4. functionResourceObject
+
+A **functionResourceObject** is the normalized representation of a function handler input, ensuring consistent structure and metadata regardless of how the handler was originally specified.
+
+It is produced by parsing a function handler reference, which may be provided as:
+
+* A **direct function reference**
+* A **string identifier** (function name or symbolic reference)
+* A **configuration object** containing a `fn` field and optional metadata
+
+**Purpose**
+
+By converting any supported handler input into a standardized object, the loader can:
+
+* Identify whether the function is symbolic, package-local, or bootstrapper-local
+* Store the original input for reference
+* Track binding requirements
+* Maintain compatibility across handler formats
+
+**Structure**
+
+A normalized **functionResourceObject** includes at least:
+
+* `fn` — The function reference itself, or a string path to it
+* `bind` — Boolean indicating whether the function should be bound to a specific context (true for local `#` references)
+* `original` — The original input value as provided by the user
+* `symbolic` *(optional)* — True if the function reference is symbolic (prefixed with `@`)
+* `local` *(optional)* — True if the reference is bootstrapper-local (prefixed with `#`)
+* `pkgLocal` *(optional)* — True if the reference is package-local (prefixed with `~`)
+
+**Examples**
+
+| Input                                          | Normalized Output (key fields only)                                                |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `"@foo.bar"`                                   | `{ fn: "foo.bar", bind: false, symbolic: true, original: "@foo.bar" }`             |
+| `"myFunc"`                                     | `{ fn: "myFunc", bind: false, symbolic: false, original: "myFunc" }`               |
+| `() => {}`                                     | `{ fn: [Function], bind: false, original: "anonymous" }`                           |
+| `function namedFn() {}`                        | `{ fn: [Function: namedFn], bind: false, original: "namedFn" }`                    |
+| `{ fn: "@pkg.fn", bind: true, extra: "meta" }` | `{ fn: "pkg.fn", bind: true, symbolic: true, original: "@pkg.fn", extra: "meta" }` |
+
+---
+## 5. Inline Package Structure
 
 An inline package definition is a fully self-contained package object.
 When `resource` is an object, **no fetching occurs** — it is treated as already resolved.
@@ -97,7 +138,7 @@ When `resource` is an object, **no fetching occurs** — it is treated as alread
 
 ---
 
-## 5. Examples of Each Form
+## 6. Examples of Each Form
 
 **String form**
 
@@ -119,7 +160,7 @@ When `resource` is an object, **no fetching occurs** — it is treated as alread
 
 ---
 
-## 6. Resolution Rules
+## 7. Resolution Rules
 
 When loading a `packageResource`:
 
@@ -130,7 +171,8 @@ When loading a `packageResource`:
 
 ---
 
-## 7. Relationship Diagram
+## 8. Relationship Diagram
+![relationship diagramt](package_repo_relationship.png)
 
 ```
 packageResource
@@ -146,7 +188,7 @@ packageResource
 
 ---
 
-## 8. Validation Notes / Required Fields
+## 9. Validation Notes / Required Fields
 
 * `packageResourceObject.resource` is required and must be string or object.
 * **Inline package objects** must have:

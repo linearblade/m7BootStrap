@@ -91,7 +91,7 @@ await bootstrap.load(resources);
 ## 5. Using Post-Load Hooks for Integration
 
 Since parallel loading may not respect dependency order, you can integrate all packages after loading:
-note: ctx format is subject to change refer to  [Hooks and handlers](HOOKS_AND_HANDLERS.md) for the current specification for your version
+note: ctx format is subject to change refer to  [Hooks & Handlers](HOOKS_AND_HANDLERS.md) for the current specification for your version
 ```js
 const onLoad = [
   "#mount.load",
