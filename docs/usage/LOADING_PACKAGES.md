@@ -227,4 +227,4 @@ As with `load()`, all provided `options` are also passed to any handlers execute
 
 * **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**
 * **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
-* **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
+* **[Mounting & Unmounting Packages](MOUNTING.md)**

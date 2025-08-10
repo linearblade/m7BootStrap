@@ -132,5 +132,5 @@ await bootstrap.unload(
 **Related Topics:**
 
 * **[Loading Packages](LOADING_PACKAGES.md)**
-* **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
+* **[Mounting & Unmounting Packages](MOUNTING.md)**
 * **[Package & Repo Specifications → functionResourceObject](PACKAGE_SPECIFICATIONS.md#functionresourceobject)**

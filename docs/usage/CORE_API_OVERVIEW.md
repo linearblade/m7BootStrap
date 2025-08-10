@@ -113,5 +113,5 @@ Assets are automatically mounted if HTML; other asset types are available for ma
 
 * **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)** — Learn how to define resources for loading.
 * **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)** — See how to attach logic at various stages.
-* **[Unmounting Packages](UNMOUNTING_PACKAGES.md)** — Safely remove packages and clean up assets/modules.
+* **[Mounting & Unmounting Packages](MOUNTING.md)** — Safely remove packages and clean up assets/modules.
 * Continue to **[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.

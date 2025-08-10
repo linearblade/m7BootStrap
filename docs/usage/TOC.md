@@ -27,7 +27,7 @@
 
 ## 8. [Hooks & Handlers](HOOKS_AND_HANDLERS.md)
 
-## 9. [Unmounting Packages](UNMOUNTING_PACKAGES.md)
+## 9. [Mounting and Unmounting Packages](MOUNTING.md)
 
 ## 10. [Advanced Usage](ADVANCED_USAGE.md)
 
