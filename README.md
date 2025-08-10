@@ -49,51 +49,70 @@ For complete usage examples, package schema details, handler resolution rules, a
 
 **[Full Usage Guide →](docs/usage/TOC.md)**
 
----
-**[Installation →](docs/usage/INSTALLATION.md)**
-### 1️⃣ Install & Import
+For detailed instructions and examples, please refer to the usage guide:
 
-```js
-import Net from "./vendor/m7Fetch/src/index.js";
-import BootStrap from "./vendor/m7Bootstrap/BootStrap.js";
-
-const net = new Net();
-const bootstrap = new BootStrap(net);
-```
+* **Installation** → [INSTALLATION.md](docs/usage/INSTALLATION.md)
+* **Quick Start** → [QUICKSTART.md](docs/usage/QUICKSTART.md)
+* **Example Library** → [EXAMPLES\_LIBRARY.md](docs/usage/EXAMPLES_LIBRARY.md)
 
 ---
 
-### 2️⃣ Load Packages
+## 💡 Use Cases
 
-```js
-const resources = [
-  { resource: "scene:chess", repo: ["/repo"] },
-  { resource: { id: "inlinePkg", modules: [], assets: [] } }
-];
+As a runtime package loader, **m7Bootstrap** excels in scenarios where flexibility, speed, and minimal setup are critical:
 
-const onLoad  = ["#mount.load", (sys, ctx) => console.log("Loaded:", ctx)];
-const onError = [(sys, ctx) => console.warn("Failed:", ctx)];
+- **Website injection** —  
+  Quickly run scripts or inject assets into someone else’s webpage without touching the server.  
+  Great for testing, content experiments, or automating UI tweaks.  
+  *(See [Example Library](docs/usage/EXAMPLES_LIBRARY.md) for DOM injection examples)*.
 
-const success = await bootstrap.load(resources, onLoad, onError, {
-  package: { hooks: true }
-});
+- **Custom browser extensions** —  
+  Dynamically load resources or features on demand.  
+  Chrome and other browsers may restrict this for app store–listed extensions, but if you’re sideloading or not publishing to a store, you can generally do whatever you want.  
+  *(See [Installation](docs/usage/INSTALLATION.md) for setup details)*.
 
-if (!success) console.error("Boot failed");
-```
+- **Rapid prototyping** —  
+  Skip the boilerplate of heavier frameworks and focus on writing feature code.  
+  Perfect for hackathons, proof-of-concepts, and small demos where time is critical.  
+  *(See [Quick Start](docs/usage/QUICKSTART.md) for the minimal setup)*.
 
----
+- **Game engines** —  
+  Load and unload scenes, UI layers, or even full engine modules on demand.  
+  Ideal for DOM-driven game engines or hybrid HTML5/WebGL projects.  
+  *(See [Example Library](docs/usage/EXAMPLES_LIBRARY.md) for asset and module loading patterns)*.
 
-### 3️⃣ Unload Packages
+- **Single-page applications (SPAs)** —  
+  Dynamically load new features, pages, or dependencies without a full page reload.  
+  Works well alongside existing frameworks or vanilla JS routing.
 
-```js
-await bootstrap.unload(
-  ["scene:chess"],     // Package IDs
-  ["#mount.unload"],   // onDone handlers
-  ["jobFail"],         // onError handlers
-  { ignoreMissing: true }
-);
-```
+- **Internal tools & dashboards** —  
+  Load widgets, analytics panels, or feature modules on demand without redeploying the entire dashboard.
 
+- **A/B testing & feature flags** —  
+  Swap UI or logic modules dynamically for experiments without full redeploys.
+
+- **Legacy system augmentation** —  
+  Add modern JavaScript modules to older, server-rendered apps without touching backend code.
+
+- **Client demo environments** —  
+  Pull packages from a staging repo for “live” previews without maintaining a full build.
+
+- **Offline-first scenarios** —  
+  Cache packages locally for offline use and update them selectively when online.
+
+- **Resource-restricted environments** —  
+  Since **m7Bootstrap** requires no particular backend, it’s extremely easy to set up inside environments that typically demand a dedicated server or heavy backend to serve specialized content.  
+  This makes it a good fit for projects built with frameworks that normally require Node, Angular, or similar stacks.
+
+- **Micro-frontend orchestration** —  
+  Dynamically load and swap independent frontend modules at runtime, enabling teams to work in isolation and deploy updates independently without rebuilding the entire app.  
+  Particularly useful in large-scale applications where different parts of the UI are maintained by separate teams.
+
+- **Live plugin systems** —  
+  Enable, disable, or swap plugins while the application is running without a page refresh.  
+  Perfect for extensible platforms, CMS-like systems, or apps with user-selectable feature sets.
+
+Once your package stack is complete, you can inline it or bundle it into a single package for faster load times.
 
 ---
 
