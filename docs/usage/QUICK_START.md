@@ -108,3 +108,4 @@ If you copied modules elsewhere, you’ll need to remove them manually.
 
 * Learn how to configure resources and repos in detail: **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**
 * Explore the full set of lifecycle hooks and event handlers: **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
+* Continue to **[Core API Overview](CORE_API_OVERVIEW.md)** to learn the primary methods exposed for use
