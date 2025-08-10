@@ -140,6 +140,7 @@ Symbolic strings like `"scene:chess"` are resolved through your repo configurati
 
 **Related Topics:**
 
-* **Package & Repo Specifications**
-* **Hooks & Handlers**
-* **Unmounting Packages**
+* **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**
+* **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
+* **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
+* Continue to **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)** for package , and repo specifications, and advanced usage thereof
