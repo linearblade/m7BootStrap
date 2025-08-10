@@ -15,12 +15,12 @@ const ok = await bootstrap.load(resources, onLoad?, onFail?, options?);
 
 **Parameters:**
 
-| Name      | Type                        | Description                                                                           |
-| --------- | --------------------------- | ------------------------------------------------------------------------------------- |
-| resources | string \| object \| array   | One or more packageResource inputs — see **Package Specifications**                   |
-| onLoad    | function \| string \| array | Handler(s) to run on success. Can be functions, method refs, or symbolic module refs. |
-| onFail    | function \| string \| array | Handler(s) to run on failure (same formats as `onLoad`).                              |
-| options   | object *(optional)*         | Loader configuration (see below).                                                     |
+| Name      | Type                                  | Description                                                                                               |
+| --------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| resources | string \| object \| array             | One or more `packageResource` inputs — see **Package Specifications**                                     |
+| onLoad    | function \| string \| array \| object | Handler(s) to run on success. Can be functions, method refs, symbolic refs, or `functionResourceObject`s. |
+| onFail    | function \| string \| array \| object | Handler(s) to run on failure (same formats as `onLoad`).                                                  |
+| options   | object *(optional)*                   | Loader configuration (see below).                                                                         |
 
 ---
 
@@ -47,6 +47,35 @@ Options are passed as the fourth argument:
 3. **Inline package** — `{ resource: { id: "...", assets: [...], modules: [...] } }`
 
 See **Package & Repo Specifications** for full format details.
+
+---
+
+## Function Resource Arguments in Handlers
+
+The `onLoad` and `onFail` parameters accept **function resource arguments**, which are normalized into [`functionResourceObject`](PACKAGE_SPECIFICATIONS.md#4-functionresourceobject) form.
+
+A function resource argument can be:
+
+* A direct function reference
+* A string reference:
+
+  * `"@pkg.module.fn"` → symbolic reference to a function inside a loaded package
+  * `"~module.fn"` or `"~fn"` → package-local reference (only valid during that package's load phase)
+  * `"#mount.load"` → bootstrapper-local method reference (no arguments supported)
+  * `"myFunction"` → global function name
+* An object with at least `{ fn: ... }`, plus optional `bind`, `symbolic`, `local`, `pkgLocal` flags, and any extra metadata.
+
+**Example:**
+
+```js
+const onLoad = [
+  "#mount.load",
+  "@resources.ui.init",
+  { fn: "~module.setup", bind: true, extra: "meta-info" }
+];
+```
+
+See **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)** for handler execution details.
 
 ---
 
@@ -99,9 +128,9 @@ Handlers can be:
 * **Function** — `(sys, ctx) => { ... }`
 * **Global function name** — `"myFunction"`
 * **Symbolic module ref** — `"@pkg.module.fn"`
+* **Package-local ref** — `"~module.fn"` or `"~fn"` (valid only during that package's load phase)
 * **Local bootstrap method** — `"#mount.load"`
-
-See **Hooks & Handlers** for full details.
+* **functionResourceObject** — see **Package & Repo Specifications**
 
 ---
 
@@ -143,4 +172,3 @@ Symbolic strings like `"scene:chess"` are resolved through your repo configurati
 * **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)**
 * **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)**
 * **[Unmounting Packages](UNMOUNTING_PACKAGES.md)**
-* Continue to **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)** for package , and repo specifications, and advanced usage thereof
