@@ -53,6 +53,7 @@ If downloading manually:
 ## 3. Import into Your Project
 
 ```js
+//adjust as necessary if you split the source from your docs.
 import Net from "./vendor/m7Fetch/src/index.js";
 import BootStrap from "./vendor/m7Bootstrap/BootStrap.js";
 
@@ -69,8 +70,8 @@ Run a minimal test to confirm installation:
 ```js
 const ok = await bootstrap.load(
   [{ resource: "scene:test", repo: ["/repo"] }],
-  (sys, ctx) => console.log("Loaded:", ctx.results),
-  (sys, ctx) => console.warn("Failed:", ctx.failed)
+  (sys, ctx) => console.log("Loaded:", ctx),
+  (sys, ctx) => console.warn("Failed:", ctx)
 );
 
 console.log("Boot status:", ok);
@@ -82,4 +83,4 @@ If you see `Loaded:` \[...] in the console, your installation is working.
 
 ## Next Steps
 
-Continue to **Basic Concepts** to learn the core ideas behind packages, repos, and handlers.
+Continue to **[Basic Concepts](BASIC_CONCEPTS.md)** to learn the core ideas behind packages, repos, and handlers.

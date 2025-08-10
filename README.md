@@ -50,7 +50,7 @@ For complete usage examples, package schema details, handler resolution rules, a
 **[Full Usage Guide →](docs/usage/TOC.md)**
 
 ---
-
+**[Installation →](docs/usage/INSTALLATION.md)**
 ### 1️⃣ Install & Import
 
 ```js
@@ -71,8 +71,8 @@ const resources = [
   { resource: { id: "inlinePkg", modules: [], assets: [] } }
 ];
 
-const onLoad  = ["#mount.load", (sys, ctx) => console.log("Loaded:", ctx.results)];
-const onError = [(sys, ctx) => console.warn("Failed:", ctx.failed)];
+const onLoad  = ["#mount.load", (sys, ctx) => console.log("Loaded:", ctx)];
+const onError = [(sys, ctx) => console.warn("Failed:", ctx)];
 
 const success = await bootstrap.load(resources, onLoad, onError, {
   package: { hooks: true }
