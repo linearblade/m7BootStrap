@@ -11,7 +11,7 @@ This section covers techniques for customizing **M7BootStrap** beyond the basics
 **M7BootStrap** automatically resolves dependencies before loading, but package loading itself can be parallelized for speed.
 
 ```js
-import { createLimiter } from "./utils/limiter.js";
+import { createLimiter } from "./<path to bootstrap>/utils/limiter.js";
 
 const limit = createLimiter(8); // 8 concurrent loads
 
@@ -21,7 +21,7 @@ await Promise.all(
 ```
 bootstrap.load ALSO provides for built in concurrency limiting
 ```
-bootstrap.load(resources,onload,onerror, {limit:8})
+bootstrap.load(resources,{load,error, limit:8})
 ```
 
 > **Tip:** Parallelization is especially useful for large asset bundles where dependency order is not critical.
@@ -105,7 +105,7 @@ const onLoad = [
   }
 ];
 
-await bootstrap.load(resources, onLoad);
+await bootstrap.load(resources, {load:onLoad});
 ```
 
 ---
@@ -115,7 +115,7 @@ await bootstrap.load(resources, onLoad);
 If you want full manual control:
 
 ```js
-const results = await bootstrap.load(resources, null, null, {
+const results = await bootstrap.load(resources,  {
   package: { hooks: false }
 });
 ```
@@ -138,7 +138,7 @@ const onLoad = [
   }
 ];
 
-await bootstrap.load(["scene:3dworld"], onLoad);
+await bootstrap.load(["scene:3dworld"], {load:onLoad});
 ```
 
 ---

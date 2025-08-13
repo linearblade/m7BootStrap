@@ -22,12 +22,14 @@ const onLoad = [
   (sys, ctx) => integrateDependencies(sys,ctx)
 ];
 
-await bootstrap.load(resources, onLoad);
+await bootstrap.load(resources, {load:onLoad});
 ```
 
 ---
 
 ## 2. Concurrency Limits
+
+By default, bootstrap keeps a internal limiter of 8 simultaneous processes per component (repo,module,assets, packages). However a large package list will be queued up at once , as will a large list of assets,etc.
 
 If you are loading many large packages at once, unbounded parallelism may cause:
 
@@ -35,18 +37,18 @@ If you are loading many large packages at once, unbounded parallelism may cause:
 * Memory spikes
 * API rate limiting (for authenticated sources)
 
-Use a concurrency limiter for controlled parallelism:
+Consider breaking up very large packages into smaller components, and use a concurrency limiter for controlled parallelism:
 
 ```js
-import { createLimiter } from "./utils/limiter.js";
+import { createLimiter } from ".<path_to_bootstrap>/utils/limiter.js";
 
 const limit = createLimiter(8); // max 8 concurrent requests
 await Promise.all(resources.map(r => limit(() => bootstrap.load([r]))));
 ```
 
-Or use built in parallelism:
+Or use built in parallelism (assuming the package size itself is not too large):
 ```js
-bootstrap.load(resources, onload,onerror, {limit:8});
+bootstrap.load(resources, {limit:8,load,error});
 ```
 
 ---

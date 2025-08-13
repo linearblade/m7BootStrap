@@ -54,8 +54,8 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 * Wait until all packages finish loading before integration:
 
   ```js
-  const success = await bootstrap.load(resources, onLoad, onError);
-  if (success) {
+  const report = await bootstrap.load(resources, {load,error});
+  if (report.success) {
     integrateAllPackages();
   }
   ```
@@ -70,7 +70,8 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 * `onLoad` or `onError` handlers do not run.
 
 **Causes:**
-
+* handlers are specified in the options object. See **[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.
+* packages hooks must be set to true in options {package:{hooks:true}}
 * Hook references are incorrect.
 * Using a string reference that doesn’t match a registered handler.
 * Using symbolic reference types incorrectly (see **Hooks & Handlers** for details).

@@ -27,7 +27,7 @@ const bootstrap = new BootStrap(net);
 
 ## `async load(resources, options?)`
 
-see **[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.
+See **[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.
 
 Loads one or more packages, resolving dependencies, fetching resources, and executing mount hooks.
 
