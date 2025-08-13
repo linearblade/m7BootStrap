@@ -70,8 +70,10 @@ Run a minimal test to confirm installation:
 ```js
 const ok = await bootstrap.load(
   [{ resource: "scene:test", repo: ["/repo"] }],
-  (sys, ctx) => console.log("Loaded:", ctx),
-  (sys, ctx) => console.warn("Failed:", ctx)
+  {
+    load: (sys, ctx) => console.log("Loaded:", ctx),
+    error: (sys, ctx) => console.warn("Failed:", ctx)
+  }
 );
 
 console.log("Boot status:", ok);
