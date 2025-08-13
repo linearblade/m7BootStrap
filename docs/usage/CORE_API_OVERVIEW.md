@@ -25,27 +25,28 @@ const bootstrap = new BootStrap(net);
 
 ---
 
-## `async load(resources, onLoad?, onFail?, options?)`
+## `async load(resources, options?)`
+
+**[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.
 
 Loads one or more packages, resolving dependencies, fetching resources, and executing mount hooks.
 
 **Parameters:**
 
 * `resources` — Single resource or array of packageResource inputs (string, object, inline package).
-* `onLoad` *(optional)* — Handler(s) to run on success. Can be:
-
-  * Function
-  * Global function name as string
-  * Symbolic reference `"@pkg.module.fn"`
-  * Local bootstrapper method reference (e.g., `"#runner.mount"`)
-* `onFail` *(optional)* — Handler(s) to run on failure (same formats as `onLoad`).
-* `options` *(optional)* — Additional config:
-
-  * `package.hooks` (boolean) — Run `run` hooks in loaded packages (default: `true`).
+* `options` *(optional)* — include load , error to run handlers.
+  * load, error (optional)* — Handler(s) to run on success or failure. Can be:
+    * Function
+    * Global function name as string
+    * Symbolic reference `"@pkg.module.fn"`
+    * Local bootstrapper method reference (e.g., `"#runner.mount"`)
+    * `package.hooks` (boolean) — Run `run` hooks in loaded packages (default: `true`).
 
 **Returns:**
 
-* `true` if all packages loaded successfully, otherwise `false`.
+* `BootStrapLoadReport` - report.success
+  * if all packages loaded successfully, true
+  * if any packages failed , false
 
 ---
 
