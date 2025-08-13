@@ -22,8 +22,10 @@ const resources = [
 
 const success = await bootstrap.load(
   resources,
-  (sys, ctx) => console.log("Loaded:", ctx),
-  (sys, ctx) => console.error("Error:", ctx)
+  {
+    load:  (sys, ctx) => console.log("Loaded:", ctx),
+    error:  (sys, ctx) => console.error("Error:", ctx)
+  }
 );
 
 if (!success) {
@@ -48,7 +50,7 @@ const inlinePkg = {
   }
 };
 
-await bootstrap.load([inlinePkg], onLoad, onError);
+await bootstrap.load([inlinePkg], {load, error});
 ```
 
 ---
@@ -68,7 +70,7 @@ const onError = [
   (sys, ctx) => console.error(`Failed to load:`  ctx)
 ];
 
-await bootstrap.load(resources, onLoad, onError);
+await bootstrap.load(resources, {load:onLoad, error:onError});
 ```
 
 ---
@@ -94,7 +96,7 @@ const resources = [
   { resource: "utils:hamsters", repo: ["/repo"] }
 ];
 
-await bootstrap.load(resources, onLoad, onError);
+await bootstrap.load(resources, {load:onLoad, error:onError});
 ```
 
 ---
@@ -107,7 +109,7 @@ const resources = [
   "@resources.hamsterUtils"
 ];
 
-await bootstrap.load(resources, "#runner.mount", "globally_scoped_function");
+await bootstrap.load(resources, {load:"#runner.mount", error:"globally_scoped_function"});
 ```
 
 ---
@@ -121,7 +123,7 @@ const resources = [
   { resource: inlinePkg }                       // inline
 ];
 
-await bootstrap.load(resources, onLoad, onError);
+await bootstrap.load(resources, {load:onLoad, error:onError});
 ```
 
 ---
