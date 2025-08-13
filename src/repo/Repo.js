@@ -2,6 +2,8 @@
  * Copyright (c) 2025 m7.org
  * License: MTL-10 (see LICENSE.md)
  */
+import concurrencyLimiter from '../utils/concurrencyLimiter.js';
+import RepoResolveReport  from '../report/repoResolveReport.js';
 /**
  * 📦 Repo
  *
@@ -38,30 +40,223 @@ export class Repo {
     }
 
 
-    /**
-     * Resolves a resource definition from a symbolic ID, URL, or instruction object.
-     *
-     * This method normalizes flexible input formats and forwards the resolution
-     * to `.load()` with extracted configuration. It supports:
-     *
-     * - A string → treated as a symbolic resource ID or path (passed to `.load`)
-     * - An object → expects shape: `{ resource, repo?, ... }`
-     *
-     * This provides a unified entry point for higher-level systems like BootStrap
-     * to resolve packages, mounts, or any other resource type without worrying about
-     * input normalization.
-     *
-     * @param {string|object} input - A resource ID string or structured instruction object.
-     * @param {object} [opts={}] - Optional extra options passed to `.load()`.
-     * @returns {Promise<object|null>} - The resolved object, or null if resolution fails.
-     *
-     * @example
-     * await repo.resolve("scene:chess");
-     *
-     * @example
-     * await repo.resolve({ resource: "engine:square", repo: ["/custom/engine/"] });
-     */
 
+    /**
+     * Normalize a packageResource into { label, stem, repos } without joining.
+     *
+     * Input forms:
+     * - "scene:chess"
+     * - { resource: "scene:chess", repo: ["/repo", { url: "/alt", method: "POST", postData: {...}, fetchOpts: {...} }] }
+     * - { resource: {...inlinePackageObject...} }  // inline package
+     *
+     * Output:
+     * {
+     *   label: string,                 // stable identifier for this resource
+     *   stem: string|null,             // resource string if present (lowercased), else null for inline
+     *   repos: Array<{                 // normalized repo entries (deduped by url)
+     *     url: string,
+     *     method: 'get'|'post',
+     *     postData?: any,
+     *     fetchOpts: object
+     *   }>
+     * }
+     */
+    normalizePackageResource(resource) {
+	const lower = s => (typeof s === 'string' ? s.trim().toLowerCase() : s);
+
+	const normalizeRepo = (r, defaults = {}) => {
+	    if (!r) return null;
+	    if (typeof r === 'string') {
+		return { url: r, method: 'get', fetchOpts: {}, ...defaults };
+	    }
+	    if (typeof r === 'object') {
+		const url = r.url ?? '';
+		const method = String(r.method || defaults.method || 'get').toLowerCase();
+		const postData = r.postData ?? defaults.postData ?? null;
+		const fetchOpts = { ...(defaults.fetchOpts || {}), ...(r.fetchOpts || {}) };
+		return { url, method: method === 'post' ? 'post' : 'get', postData, fetchOpts };
+	    }
+	    return null;
+	};
+
+	const dedupeByUrl = list => {
+	    const seen = new Set();
+	    const out = [];
+	    for (const it of list) {
+		const key = lower(it.url || '');
+		if (!key || seen.has(key)) continue;
+		seen.add(key);
+		out.push({ ...it, url: key }); // store url lowercased
+	    }
+	    return out;
+	};
+
+	// Case 1: string resource → no repos attached here
+	if (typeof resource === 'string') {
+	    const stem = lower(resource);
+	    return { label: stem, type:'remote', stem, repos: [] };
+	}
+
+	// Case 2: object resource
+	if (resource && typeof resource === 'object') {
+	    const res = resource.resource;
+
+	    // Inline package: resource is an object
+	    if (res && typeof res === 'object') {
+		const label = res.id ? lower(res.id) : '[inline]';
+		return { label, type:'inline', stem: null, repos: [] };
+	    }
+
+	    // External package: resource is a string + optional repo(s)
+	    if (typeof res === 'string') {
+		const stem = lower(res);
+		const repoField = resource.repo;
+
+		// Normalize repo list (string | object | array of those)
+		const rawList = Array.isArray(repoField) ? repoField : (repoField ? [repoField] : []);
+		const repos = dedupeByUrl(
+		    rawList
+			.map(r => normalizeRepo(r))
+			.filter(Boolean)
+		);
+
+		// default label = stem; if you prefer including first repo host, adjust here
+		return { label: stem, type:'remote', stem, repos };
+	    }
+	}
+
+	// Fallback: unknown shape
+	return { label: '[unknown]', stem: null, repos: [] };
+    }
+
+    /**
+     * Recursively traverses and resolves all packages and their dependencies
+     * into a unique set of package definitions.
+     *
+     * This function walks the dependency graph starting from the given package(s),
+     * fetching package definitions via `repo.resolve()` and normalizing each
+     * reference with `repo.normalizePackageResource()` to avoid duplicate work.
+     *
+     * It does NOT:
+     *   - Install or load the packages
+     *   - Sort the packages in dependency order (topological sort)
+     *   - Produce an explicit adjacency map of the graph
+     *
+     * Instead, it returns a flat array of unique package definitions discovered
+     * during traversal (deps-first order for the traversal path taken).
+     *
+     * @async
+     * @param {string|object|Array<string|object>} input
+     *     One or more packageResource references. Each may be:
+     *       - A direct URL or symbolic ID (string)
+     *       - A packageResourceObject { resource, [repo] }
+     *       - An inline package definition { resource: { ...packageDef } }
+     *
+     * @param {object} [options={}]
+     *     Reserved for future traversal/graph options (e.g., max depth, filtering).
+     *
+     * @returns {Promise<Array<object>>}
+     *     A Promise resolving to an array of unique resolved package definitions.
+     *
+     * @example
+     * // Collect all unique dependencies for a scene
+     * const packages = await buildDependencyGraph("scene:chess");
+     * console.log(packages.map(p => p.id));
+     */
+    async buildDependencyGraph(input, options = {}) {
+	const { limit = options?.limit ?? 8, circuitBreaker = 100,load:loadHandler = null, error: errorHandler=null, itemLoad : itemLoadHandler=null, itemError:itemErrorHandler = null } = options?.repo || {};
+
+	const report = new RepoResolveReport();
+	report.startRun();                // mark start, capture options if you want
+	report.noteInput(input);   
+
+	
+        const normalize = v => (Array.isArray(v) ? v : v == null ? [] : [v]);
+        const  alreadyVisited = (list, resource) =>{
+            const norm = this.normalizePackageResource(resource);
+            return list.some(entry => {
+                if (entry.type !== norm.type) return false;
+                if (entry.stem !== norm.stem) return false;
+                if (entry.repos.length !== norm.repos.length) return false;
+                const result =  entry.repos.every((r, i) =>
+                    r.url === norm.repos[i].url &&
+                        r.method === norm.repos[i].method
+                );
+		if (result)
+		    report.noteSkip({ resource, reason: 'cache_hit', key: `${norm.stem} - ${norm.type}` });
+		return result;
+            });
+        };
+        let counter = 0;
+        const out = [];
+        const visited = [];
+	const errors = [];
+	let tripped = false;
+
+        const visit = async (node) => {
+	    if( tripped ) {
+		return true;
+	    }
+
+            if (counter++ > circuitBreaker) {
+		tripped = true;
+		const msg = `circuitBreaker tripped at ${circuitBreaker} iterations for graph production. set it higher or investigate further`;
+		errors.push(msg,node);
+		return;
+	    }
+
+            if (!node) return;
+            if (alreadyVisited(visited, node) ) {
+		report.noteSkip({ node, reason: 'already_visited' });
+                return;
+            }
+	    report.noteVisitStart(node);
+	    
+            const normalized =this.normalizePackageResource(node);
+	    report.noteNormalizedResource(normalized);
+            visited.push(normalized);
+
+            const def = await this.resolve(node).catch(() => null);
+            if (!def) {
+		await this.bootstrap._runHandlers(itemErrorHandler, {node,def,report},`[REPO-ITEM-ERROR]`);
+		report.noteResolveFail({ node, reason: 'null_definition' });
+		errors.push([`unable to resolve ${normalized.label}`,node]);
+		return;
+	    }
+	    report.noteResolveSuccess(def);   // include def.id, source URL, repo used, etc.
+
+	    await this.bootstrap._runHandlers(itemLoadHandler, {node,def,report },`[REPO-ITEM-LOAD]`);
+	    
+            // Run all child visits in parallel…
+            const deps = normalize(def.dependencies);
+	    report.noteDependencies(def.id, deps);
+
+            const limiter = concurrencyLimiter(limit); // e.g., 8 concurrent
+            await Promise.all(deps.map(d => limiter(() => visit(d))));
+            out.push(def);
+	    report.noteOrdered(def.id, out.length);  // “position N in build order”
+        };
+
+        for (const item of normalize(input)) {
+	    report.noteEnqueue(item); 
+            await visit(item);
+        }
+	//console.log('here');
+	//console.log(errors);
+	if (errors.length){
+            await this.bootstrap._runHandlers(errorHandler, {input,output:out,report },`[REPO-ERROR]` );
+	    //throw new Error(`dependency graph encountered ${errors.length} errors, first: ${errors[0][0]}`); 
+	}else {
+	    await this.bootstrap._runHandlers(loadHandler, {input,output:out,report } ,`[REPO-LOAD]` );
+	}
+	report.finishRun({ total: out.length });
+	report.finalize();
+	return { list: out, report };
+        //return out; // always an array
+    }
+
+    
+    
     async resolve(input, opts = {}) {
 	const key = this._makeCacheKey(input);
 	if (key && this._resolveCache.has(key)) {
@@ -94,21 +289,7 @@ export class Repo {
 	}
 	return null; // fallback if it's inline or anonymous
     }
-    /*
-    async resolve(input, opts = {}) {
-	if (typeof input === 'string') {
-            return await this.load(input, opts);
-	}
 
-	if (input && typeof input === 'object') {
-            const { resource, repo, ...rest } = input;
-            return await this.load(resource, { repo, ...opts, ...rest });
-	}
-
-	console.warn("[Repo] Invalid input to resolve:", input);
-	return null;
-    }
-    */
     /**
      * Resolves a package definition from an ID, path, or inline object.
      *
@@ -182,7 +363,7 @@ export class Repo {
 		       ?`[${label}] JSON syntax error in ${url}.\n - Ensure proper formatting (quoted keys, no trailing commas, etc.)\n - ${err.message}`
 		       : `${err.message}`
 		      );
-		      console.error(msg);
+		console.error(msg);
 		errors.push({ url, err });
 	    }
 	}
@@ -261,38 +442,6 @@ export class Repo {
 	return result;
     }
     
-    /**
-     * Internal helper to build a prioritized list of unique repository URLs.
-     *
-     * @param {Array<string>|null} runtime - The repo(s) provided at runtime.
-     * @param {Array<string>} order - Priority labels (e.g., ["runtime", "default"]).
-     * @returns {Array<string>} Ordered, de-duplicated list of repo endpoints.
-     */
-    /*
-    _buildRepoList(runtime, order) {
-	const repoLists = {
-            runtime: runtime ? [].concat(runtime) : [],
-            default: this.repos || [''],
-	    local : [''],
-	};
-
-	const seen = new Set();
-	const result = [];
-
-	for (const label of order) {
-            const list = repoLists[label];
-            if (Array.isArray(list)) {
-		for (const url of list) {
-                    if (!seen.has(url)) {
-			seen.add(url);
-			result.push(url);
-                    }
-		}
-            }
-	}
-
-	return result;
-    }*/
 
     /**
      * Internal helper to finalize and optionally transform a resolved package definition.
@@ -327,21 +476,25 @@ export class Repo {
      */
 
     _buildPath(repoBase, def, isPath = null) {
-    // Auto-detect if needed
-    const pathMode = isPath !== null ? isPath : def.endsWith(".json") || def.startsWith(".");
+	// Auto-detect if needed
+	const pathMode = isPath !== null ? isPath : def.endsWith(".json") || def.startsWith(".");
 
-    // Normalize base
-    const cleanBase = repoBase.replace(/\/+$/, "");
+	// Normalize base
+	const cleanBase = repoBase.replace(/\/+$/, "");
 
-    // Normalize def (handle both path and symbolic cases)
-    const cleanDef = pathMode
-        ? def.replace(/^\/+/, "")                                   // path: remove leading slashes
-        : def.replace(/^\/+/, "").replace(":", "/") + ".json";      // symbolic: clean + convert
+	// Normalize def (handle both path and symbolic cases)
+	const cleanDef = pathMode
+              ? def.replace(/^\/+/, "")                                   // path: remove leading slashes
+              : def.replace(/^\/+/, "").replace(":", "/") + ".json";      // symbolic: clean + convert
 
-    return `${cleanBase}/${cleanDef}`;
+	return `${cleanBase}/${cleanDef}`;
     }
     
     
 }
 
+
+
 export default Repo;
+
+

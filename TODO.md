@@ -1,10 +1,12 @@
+this is my scratch pad. you can look at it or whatever. its much faster than jumping in and out of jira
+
 [x] net.batch requires concurrency limiting implemented. (more of a m7Fetch thing but still the same shit list.)
 [x] full granularity on handlers where it matters , package , module and asset loads
 [x] mount / unmount : either overload the function parameters or split the functions for api wrapper. this could be done via #mount and #unmount instead of #mount.load and mount.unload,
 [x] mount / unmount : pkg level mount / unmount
 [x] standardize and double check all ctx values on _runHandlers
-* probably a final pass on documentation for this version
-* get the files uploaded into the package, and push live.
+[x] probably a final pass on documentation for this version
+[x] get the files uploaded into the package, and push live.
 [x] logging. // basically solved with the reports
 [x] investigate libfuncget incase window is an issue for npm
 [x] mount load on same target seems to delete the document body
