@@ -27,7 +27,7 @@ const bootstrap = new BootStrap(net);
 
 ## `async load(resources, options?)`
 
-**[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.
+see **[Loading Packages](LOADING_PACKAGES.md)** for information on loading packages.
 
 Loads one or more packages, resolving dependencies, fetching resources, and executing mount hooks.
 
@@ -40,7 +40,7 @@ Loads one or more packages, resolving dependencies, fetching resources, and exec
     * Global function name as string
     * Symbolic reference `"@pkg.module.fn"`
     * Local bootstrapper method reference (e.g., `"#runner.mount"`)
-    * `package.hooks` (boolean) — Run `run` hooks in loaded packages (default: `true`).
+  * `package.hooks` (boolean) — Run `run` hooks in loaded packages (default: `true`).
 
 **Returns:**
 
@@ -65,50 +65,32 @@ Unmounts and clears loaded packages.
 
 ---
 
-## `normalizePackageResource(resource)`
+## `bootstrap.mount.load(pkgID,options?)`
 
-Normalizes a package resource into a consistent object:
+Mounts a given package. if that package is already loaded, it will not be reloaded.
+use options.force to force mount a package that is already loaded.
 
-```js
-{
-  label: string,   // stable identifier
-  type: string,    // 'inline' | 'remote'
-  stem: string,    // normalized resource string or null for inline
-  repos: [         // normalized repo entries
-    { url, method, postData?, fetchOpts }
-  ]
-}
-```
+---
+## `bootstrap.mount.unload(pkgID,options?)`
 
-Useful for comparing or tracking resources internally.
+Unounts a given package 
 
 ---
 
 ## `async buildDependencyGraph(resources)`
 
 Given one or more packageResource inputs, resolves all dependencies recursively and returns a flat, ordered list of package definitions ready to be loaded.
+This is mainly useful to testing, otherwise there is no need to build a dependency graph on your own.
 
 ---
 
-## `getCache(key)` / `setCache(key, value)`
 
-Access or store entries in the bootstrapper’s internal resource cache.
+## `data`
 
----
-
-## `modules`
-
-An object storing loaded modules by package ID.
-Modules are available after load and cleared on unload (unless copied elsewhere).
+All loaded data is stored within the PackageData Object. this may be accessed via a variety of methods , or directly.
 
 ---
 
-## `assets`
-
-An object storing loaded assets by package ID.
-Assets are automatically mounted if HTML; other asset types are available for manual integration.
-
----
 
 **Related Topics:**
 
