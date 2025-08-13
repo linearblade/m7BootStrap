@@ -87,7 +87,7 @@ This section covers common issues you may encounter when using **M7BootStrap** a
 
   * `~module.function` or `~function` — Used specifically during the **load phase for that package**, references `thisPackage.module.function`. Not valid for general `onLoad` or error handlers.
   * `@somePackage:module.function` — References a module function in a package loaded into the bootstrapper.
-  * `#mount.load` or `#mount.unload` — Calls bootstrapper methods, primarily for mounting/unmounting operations (no argument support currently).
+  * `#runner.mount` or `#runner.unmount` — Calls bootstrapper methods, primarily for mounting/unmounting operations (no argument support currently).
   * Invalid function resources — Functions must be direct, symbolic, or a resource object (see **Package & Repo Specifications**).
 
 ---
@@ -131,7 +131,7 @@ This section covers common issues you may encounter when using **M7BootStrap** a
   ```js
   await bootstrap.unload(
     ["scene:chess"],
-    ["#mount.unload", cleanupCustomModules]
+    ["#runner.unmount", cleanupCustomModules]
   );
   ```
 

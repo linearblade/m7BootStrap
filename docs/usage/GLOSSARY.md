@@ -36,7 +36,7 @@ Handlers can be:
 * A function reference
 * A global function name (`"myFunc"`)
 * A symbolic module ref (`"@pkg.module.fn"`)
-* A local bootstrapper-bound method (`"#mount.load"`)
+* A local bootstrapper-bound method (`"#runner.mount"`)
 
 ---
 

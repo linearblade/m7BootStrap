@@ -18,7 +18,7 @@ Parallel loading does **not** guarantee dependency order. If strict load order i
 
 ```js
 const onLoad = [
-  "#mount.load",
+  "#runner.mount",
   (sys, ctx) => integrateDependencies(sys,ctx)
 ];
 

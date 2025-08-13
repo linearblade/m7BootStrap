@@ -59,7 +59,7 @@ const opts = {
 
 // Handlers
 const onLoad = [
-  "#mount.load", // symbolic reference to a bootstrapper method
+  "#runner.mount", // symbolic reference to a bootstrapper method
   (sys, ctx) => console.log("Loaded packages:", ctx)
 ];
 
@@ -69,7 +69,7 @@ const onError = [
 ];
 
 // Load the package(s)
-const success = await bootstrap.load(resources, onLoad, onError, opts);
+const success = await bootstrap.load(resources,{ load:onLoad, error:onError}, opts);
 
 if (!success) {
   console.error("Bootstrap failed");
@@ -93,7 +93,7 @@ if (!success) {
 ```js
 await bootstrap.unload(
   ["scene:chess"],        // package ids
-  ["#mount.unload"],      // onDone handlers
+  ["#runner.unmount"],      // onDone handlers
   ["logFailure"],         // onError handlers
   { ignoreMissing: true } // options
 );

@@ -13,7 +13,7 @@ Call `.unload()` on your `BootStrap` instance:
 ```js
 await bootstrap.unload(
   ["scene:chess"],          // packages to unload
-  ["#mount.unload"],        // onDone handlers
+  ["#runner.unmount"],        // onDone handlers
   ["jobFail"],              // onError handlers
   { ignoreMissing: true }   // options
 );
@@ -76,12 +76,12 @@ const resources = [
 ];
 
 // Load packages
-await bootstrap.load(resources, ["#mount.load"]);
+await bootstrap.load(resources, ["#runner.mount"]);
 
 // Later, unload
 await bootstrap.unload(
   ["scene:chess", "allpurposemounter"],
-  ["#mount.unload"],
+  ["#runner.unmount"],
   ["jobFail"],
   { ignoreMissing: true }
 );

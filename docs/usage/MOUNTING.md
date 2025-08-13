@@ -4,14 +4,14 @@
 
 Mounting is **not the same** as loading. *Loading/unloading* retrieves packages, resolves dependencies, and manages module/asset registries. *Mounting/unmounting* injects or removes concrete DOM elements described by package **mount assets**.
 
-> The Mount Manager consumes assets of type **`mount`** (JSON configs), injects their DOM nodes, and tracks them so corresponding **unmount** calls can cleanly remove them. It works via the `#mount.load` / `#mount.unload` handlers you attach to `load()` / `unload()`.
+> The Mount Manager consumes assets of type **`mount`** (JSON configs), injects their DOM nodes, and tracks them so corresponding **unmount** calls can cleanly remove them. It works via the `#runner.mount` / `#runner.unmount` handlers you attach to `load()` / `unload()`.
 
 ---
 
 ## When to Use
 
-* **During load:** call `#mount.load` in your `onLoad` handlers to auto‑inject HTML/DOM assets.
-* **During unload:** call `#mount.unload` in `onDone` to remove previously injected nodes.
+* **During load:** call `#runner.mount` in your `onLoad` handlers to auto‑inject HTML/DOM assets.
+* **During unload:** call `#runner.unmount` in `onDone` to remove previously injected nodes.
 * **Package‑scoped mounting (planned/now supported):** target specific package IDs when mounting/unmounting.
 
 ---
@@ -48,14 +48,14 @@ The runtime resolves the package‑local \*\*asset \*\*\`\` and hands its conten
 
 ## API: Handlers
 
-### `#mount.load`
+### `#runner.mount`
 
 Mount all eligible `type:"mount"` assets.
 
 * **Default behavior:** inject all `mount` assets for the relevant packages.
 * **Tracking:** nodes are recorded in the DOM registry under their **package group** for later removal.
 
-### `#mount.unload`
+### `#runner.unmount`
 
 Remove previously injected nodes.
 
@@ -75,7 +75,7 @@ Pass target packages in the `options` object (accessible to handlers via `ctx.op
 ```js
 await bootstrap.load(resources,
   [
-    { fn: "#mount.load" } // handler sees ctx.options.mount.packages
+    { fn: "#runner.mount" } // handler sees ctx.options.mount.packages
   ],
   null,
   {
@@ -85,7 +85,7 @@ await bootstrap.load(resources,
 
 await bootstrap.unload(
   ["scene:chess"],
-  [ { fn: "#mount.unload" } ],
+  [ { fn: "#runner.unmount" } ],
   null,
   { mount: { packages: ["scene:chess"] } }
 );
@@ -97,11 +97,11 @@ If/when `#mount.*` accepts inline args on the handler:
 
 ```js
 const onLoad = [
-  { fn: "#mount.load", args: { packages: ["scene:chess"] } }
+  { fn: "#runner.mount", args: { packages: ["scene:chess"] } }
 ];
 
 const onDone = [
-  { fn: "#mount.unload", args: { packages: ["scene:chess"] } }
+  { fn: "#runner.unmount", args: { packages: ["scene:chess"] } }
 ];
 ```
 
@@ -114,7 +114,7 @@ Both approaches result in **per‑package** injection/teardown rather than globa
 ### Mount during Load
 
 ```js
-const onLoad = ["#mount.load"]; // auto‑inject mount assets from loaded packages
+const onLoad = ["#runner.mount"]; // auto‑inject mount assets from loaded packages
 await bootstrap.load(resources, onLoad, ["jobFail"], {
   hooks: true,
   mount: { packages: ["scene:chess"] } // optional narrowing
@@ -126,7 +126,7 @@ await bootstrap.load(resources, onLoad, ["jobFail"], {
 ```js
 await bootstrap.unload(
   ["scene:chess"],
-  ["#mount.unload"],    // remove nodes injected for this package
+  ["#runner.unmount"],    // remove nodes injected for this package
   ["jobFail"],
   { mount: { packages: ["scene:chess"] } }
 );
@@ -160,7 +160,7 @@ await bootstrap.unload(
 
 **Related Topics**
 
-* **[Loading Packages](LOADING_PACKAGES.md)** — attach `#mount.load` in `onLoad`
-* **[Mounting & Unmounting Packages](MOUNTING.md)** — attach `#mount.unload` in `onDone`
+* **[Loading Packages](LOADING_PACKAGES.md)** — attach `#runner.mount` in `onLoad`
+* **[Mounting & Unmounting Packages](MOUNTING.md)** — attach `#runner.unmount` in `onDone`
 * **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)** — handler forms & `functionResourceObject`
 * **[Package & Repo Specifications](PACKAGE_SPECIFICATIONS.md)** — asset definitions & function resource objects

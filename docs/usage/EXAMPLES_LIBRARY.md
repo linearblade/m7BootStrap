@@ -57,7 +57,7 @@ await bootstrap.load([inlinePkg], onLoad, onError);
 
 ```js
 const onLoad = [
-  "#mount.load", // built-in DOM/asset mount
+  "#runner.mount", // built-in DOM/asset mount
   (sys, ctx) => {
     console.log("All packages loaded. Moving modules to final location.");
     moveModules(sys.modules);
@@ -78,7 +78,7 @@ await bootstrap.load(resources, onLoad, onError);
 ```js
 await bootstrap.unload(
   ["scene:chess"],
-  ["#mount.unload", cleanupModules],
+  ["#runner.unmount", cleanupModules],
   ["jobFail"],
   { ignoreMissing: true }
 );
@@ -107,7 +107,7 @@ const resources = [
   "@resources.hamsterUtils"
 ];
 
-await bootstrap.load(resources, "#mount.load", "globally_scoped_function");
+await bootstrap.load(resources, "#runner.mount", "globally_scoped_function");
 ```
 
 ---

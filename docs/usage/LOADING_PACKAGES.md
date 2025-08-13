@@ -103,7 +103,7 @@ Examples include:
 
   * `"@pkg.module.fn"` → function inside a loaded package
   * `"~module.fn"` or `"~fn"` → package-local reference
-  * `"#mount.load"` → bootstrapper-local method reference
+  * `"#runner.mount"` → bootstrapper-local method reference
   * `"myFunction"` → global function name
 * Object form with `{ fn: ... }` and optional flags/metadata.
 
@@ -118,7 +118,7 @@ const resources = [
 ];
 
 const ok = await bootstrap.load(resources, {
-  load: ["#mount.load", (sys, ctx) => console.log("Loaded:", ctx.results)],
+  load: ["#runner.mount", (sys, ctx) => console.log("Loaded:", ctx.results)],
   error: [(sys, ctx) => console.error("Failed:", ctx.failed)],
   package: { hooks: true }
 });
@@ -151,7 +151,7 @@ Handler types:
 * Global function name — `"myFunction"`
 * Symbolic module ref — `"@pkg.module.fn"`
 * Package-local ref — `"~module.fn"` or `"~fn"`
-* Bootstrap method — `"#mount.load"`
+* Bootstrap method — `"#runner.mount"`
 * `functionResourceObject`
 
 ---
@@ -197,7 +197,7 @@ Options:
 | `keepAssets`    | boolean | `false` | Keep assets mounted/registered instead of removing them. |
 | `keepModules`   | boolean | `false` | Keep modules registered instead of clearing them.        |
 
-> To unmount assets, include `"#mount.unload"` in `onDone`.
+> To unmount assets, include `"#runner.unmount"` in `onDone`.
 
 ---
 

@@ -23,8 +23,8 @@ const opts = {
 // - a function
 // - a global string "myFunc"
 // - a symbolic module ref "@pkg.module.fn"
-// - a local method "#mount.load" (bound to `bootstrap`)
-const onLoad  = ["#mount.load", (sys, ctx) => console.log("Loaded:", ctx.results)];
+// - a local method "#runner.mount" (bound to `bootstrap`)
+const onLoad  = ["#runner.mount", (sys, ctx) => console.log("Loaded:", ctx.results)];
 const onError = ["jobFail",       (sys, ctx) => console.warn("Failed:", ctx.failed, ctx.err)];
 
 // Resource list can be:
@@ -48,7 +48,7 @@ if (!ok) {
 // Unload by package id (keeps assets/modules if desired)
 await bootstrap.unload(
   ["scene:chess"],                 // ids or objects with `.id`
-  ["#mount.unload"],               // onDone handlers
+  ["#runner.unmount"],               // onDone handlers
   ["jobFail"],                     // onError handlers
   { ignoreMissing: true }          // options
 );
@@ -58,4 +58,4 @@ await bootstrap.unload(
 - Packages can declare assets, modules, dependencies, and run hooks.
 - The bootstrapper resolves a dependency graph first, then loads in a safe order.
 - Asset/meta registries and module references are tracked for you.
-- Mounting is pluggable: ship a mount package or use #mount.load to apply DOM injections.
+- Mounting is pluggable: ship a mount package or use #runner.mount to apply DOM injections.

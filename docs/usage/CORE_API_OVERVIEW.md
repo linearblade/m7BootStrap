@@ -37,7 +37,7 @@ Loads one or more packages, resolving dependencies, fetching resources, and exec
   * Function
   * Global function name as string
   * Symbolic reference `"@pkg.module.fn"`
-  * Local bootstrapper method reference (e.g., `"#mount.load"`)
+  * Local bootstrapper method reference (e.g., `"#runner.mount"`)
 * `onFail` *(optional)* — Handler(s) to run on failure (same formats as `onLoad`).
 * `options` *(optional)* — Additional config:
 

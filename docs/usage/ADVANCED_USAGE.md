@@ -94,7 +94,7 @@ Since parallel loading may not respect dependency order, you can integrate all p
 note: ctx format is subject to change refer to  [Hooks & Handlers](HOOKS_AND_HANDLERS.md) for the current specification for your version
 ```js
 const onLoad = [
-  "#mount.load",
+  "#runner.mount",
   (sys, ctx) => {
 
     ctx.results.forEach(pkg => {

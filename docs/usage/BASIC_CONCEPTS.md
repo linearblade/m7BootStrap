@@ -74,7 +74,7 @@ Handlers let *you* react to load/unload events with your own code.
 Handlers can be:
 - A direct function.
 - A string name (global or symbolic).
-- A bound method reference (`"#mount.load"`, "~module.start", "@pkg:module.start","something_in_global_namespace").
+- A bound method reference (`"#runner.mount"`, "~module.start", "@pkg:module.start","something_in_global_namespace").
 
 
 ---
