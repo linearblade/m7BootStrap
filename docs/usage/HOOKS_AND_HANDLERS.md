@@ -75,7 +75,7 @@ Attach handlers when calling `.load()` or `.unload()`:
 const onLoad  = ["#runner.mount", "@ui.notify.loaded", (sys, ctx) => console.log("Loaded:", ctx.results)];
 const onError = ["jobFail", (sys, ctx) => console.warn("Failed:", ctx.failed)];
 
-await bootstrap.load(resources, onLoad, onError);
+await bootstrap.load(resources, {load:onLoad, error:onError});
 ```
 
 > **Note:** Because `~` package‑local references only resolve during the specific package’s load phase, avoid using them in global `onLoad` arrays that execute after all packages complete.
