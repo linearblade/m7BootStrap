@@ -30,15 +30,18 @@
 
 ## 9. [Mounting and Unmounting Packages](MOUNTING.md)
 
-## 10. [Accessing Data](ACCESSING_DATA.md)
+## 10. [Runners Module](RUNNERS.md)
+* Helper for translating #runners.* handlers into mount/unmount calls
+
+## 11. [Accessing Data](ACCESSING_DATA.md)
 * How to retrieve loaded packages, assets, and modules via bootstrap.data
 
-## 11. [Advanced Usage](ADVANCED_USAGE.md)
+## 12. [Advanced Usage](ADVANCED_USAGE.md)
 
-## 12. [Performance Considerations](PERFORMANCE.md)
+## 13. [Performance Considerations](PERFORMANCE.md)
 
-## 13. [Troubleshooting](TROUBLESHOOTING.md)
+## 14. [Troubleshooting](TROUBLESHOOTING.md)
 
-## 14. [Examples Library](EXAMPLES_LIBRARY.md)
+## 15. [Examples Library](EXAMPLES_LIBRARY.md)
 
-## 15. [Glossary](GLOSSARY.md)
+## 16. [Glossary](GLOSSARY.md)

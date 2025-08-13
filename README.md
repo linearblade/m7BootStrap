@@ -1,16 +1,14 @@
 # M7BootStrap
 
-**M7BootStrap** is a modular runtime package loading and mounting toolkit, designed to work across a wide range of applications.  
-It provides a clean, extensible framework for resolving package dependencies, staging runtime assets and modules, and integrating them into a running system — with an emphasis on composability, clarity, and long-term maintainability.
+M7BootStrap is a modular runtime package loading and mounting toolkit, designed to work across a wide range of applications.It provides a clean, extensible framework for resolving package dependencies, staging runtime assets and modules, and integrating them into a running system — with an emphasis on composability, clarity, and long-term maintainability.
 
-> Don’t waste cycles building loaders to load loaders.  
-> Let BootStrap handle dependency resolution, resource loading, and lifecycle wiring — so you can focus on the actual application logic.
+Don’t waste cycles building loaders to load loaders.Let BootStrap handle dependency resolution, resource loading, and lifecycle wiring — so you can focus on the actual application logic.
 
-⚠️ **Warning: Documentation Incomplete**
-> 
-> This project is currently under active development, and documentation is still being written.
-> Some features may be undocumented or subject to change.  
-> Please check back soon as we continue to update this repository.
+✅ Version 1 Ready
+
+M7BootStrap is now feature-complete for its 1.0 release, with detailed documentation and stable APIs.
+
+The loader, dependency resolution, concurrency limiting, and lifecycle hooks are production-ready. Documentation now covers all major features, including granular data access and advanced load control.
 
 ---
 
@@ -26,13 +24,17 @@ Because it’s implemented entirely in JavaScript, it works with any backend and
 
 ## ⚡️ Features
 
-- 📦 **Dynamic package loading & unloading** — handle assets, modules, and other resources at runtime.
-- 🔗 **Dependency resolution** — automatically trace and load package dependencies in the correct order.
-- ⚡ **Parallel fetching** — download packages and assets concurrently to minimize load times.
-- 🔄 **Configurable lifecycle stages** — control boot, mount, start, and teardown phases.
-- 🧩 **Modular mount/unmount handlers** — easily add or remove runtime components.
-- 🗂️ **Runtime asset registry** — track and reference loaded resources without manual bookkeeping.
-- 🌐 **Backend-agnostic** — works with any server or CDN; no special backend setup required.
+* 📦 **Dynamic package loading & unloading** — handle assets, modules, and other resources at runtime.
+* 🔗 **Dependency resolution** — automatically trace and load package dependencies in the correct order.
+* ⚡ **Parallel fetching** — download packages and assets concurrently to minimize load times.
+* 🔄 **Configurable lifecycle stages** — control boot, mount, start, and teardown phases.
+* 🧩 **Modular mount/unmount handlers** — easily add or remove runtime components.
+* 🗂️ **Runtime asset registry** — track and reference loaded resources without manual bookkeeping.
+* 🌐 **Backend-agnostic** — works with any server or CDN; no special backend setup required.
+* 📊 **Detailed load/fail report** — inspect results of every load operation.
+* 🎯 **Granular success/failure handlers** — at global, package, repo, module, and asset levels.
+* 🚦 **Per-scope concurrency limiting** — `limit`, `package.limit`, `repo.limit`, etc., for precise control.
+* 🧮 **Rich data access layer** — via `bootstrap.data` (alias `bootstrap.packages.data`) with filtering helpers.
 
 ---
 
@@ -116,36 +118,13 @@ Once your package stack is complete, you can inline it or bundle it into a singl
 
 ---
 
-## 🚧 Status
+⚡ Status
 
-This project is **under active development** but is production ready, with a few caveats:
+Version 1.0 is production ready. The core lifecycle phases — package schema loading, asset loading, module loading, and mounting — are stable and well-documented.
 
-* **Parallel loading** means dependencies are not installed in dependency-order.
+Advanced features like per-scope concurrency limits, granular success/fail handlers, and detailed load reports are included.
 
-  This is done for performance reasons; as a runtime loader, prioritizing fast retrieval of assets — including both modules and other resources — takes precedence over loading them in strict dependency order.
-
-  You should wait until *all* packages finish loading, then integrate them into your application as needed.
-  For example:
-
-  ```js
-  const success = await scenes.bootstrap.load(resourceList, onLoad, onError, {
-    package: { hooks: true }
-  });
-
-  // onLoad handler
-  ["#mount.load", "copy_modules_from_bootstrap_to_final_location"]
-  ```
-
-  HTML assets will mount automatically, but if you want to move modules or assets to custom locations, handle that in your post-load hook.
-
-* **Unmounting works correctly** — packages will be unmounted and modules cleared from the bootstrapper — but if you copied those modules elsewhere, you are responsible for removing them from that location.
-
-* **Modules can run in place** — there’s no technical reason they must be relocated. Moving them is purely for organizational or “clean workspace” reasons.
-
-* **Run/error hooks are currently broad** — you’ll know if something failed, but fine-grained context may require checking the console logs.
-
-Core lifecycle phases — package schema loading, asset loading, module loading, and mounting — are stable.
-Future updates will improve dependency-aware loading, hook granularity, and diagnostics.
+Dependency-aware ordering is still parallelized for performance, so hooks should be used for integration points where sequence matters.
 
 ---
 
