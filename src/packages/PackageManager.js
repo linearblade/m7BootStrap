@@ -128,17 +128,26 @@ export class PackageManager {
     }
 
     _parseSymbol(entry) {
-	const [pkgID, localMod, ...fnParts] = String(entry).split('.');
-	return {
-	    modID: `${pkgID}/${localMod}`,      // "ui:console/logic"
-	    fnPath: fnParts.join('.') || null,  // "init" or "init.sub"
-	};
+        const [pkgMod, ...fnParts] = String(entry).split('.');
+        //const [modID, ...rest] = entry.split('.');
+        //const fnPath = rest.join('.');
+	//console.log(pkgMod,fnParts);
+        return {
+            modID: pkgMod,      // "ui:console/logic"
+            fnPath: fnParts.join('.') || null,  // "init" or "init.sub"
+        };
     }
-
     
     _getSymbolicFunction(entry, bind = false) {
 	if (typeof entry !== 'string' || entry ==='') return undefined;
-	const { modID, fnPath } = this._parseSymbol(entry);
+	/*
+	const parts = entry.split('.');
+	const pkgID = parts.shift();   // "ui:console"
+	const localMod = parts.shift();   // "logic"
+	const modID = `${pkgID}.${localMod}`;
+	const fnPath = parts.join('.'); // "init" or "init.something"
+	*/
+	const { modID, fnPath } = parseSymbol(entry);
 	//const [modID, fnPath] = entry.split('.', 2);
 	const mod = this.modules.get(modID);
 	if (!mod) return undefined;
