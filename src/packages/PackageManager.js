@@ -134,12 +134,14 @@ export class PackageManager {
 
 	const parts = entry.split('.');
 	const pkgID = parts.shift();   // "ui:console"
-	const modID = parts.shift();   // "logic"
+	const localMod = parts.shift();   // "logic"
+	const modID = `${pkgID}.${localMod}`;
 	const fnPath = parts.join('.'); // "init" or "init.something"
 
+	
 	//const [modID, ...rest] = entry.split('.');
 	//const fnPath = rest.join('.');
-	//console.warn(`modID ${modID} / fnPath ${fnPath}`);
+	console.warn(`modID ${modID} / fnPath ${fnPath}`);
 	//const [modID, fnPath] = entry.split('.', 2);
 	const mod = this.modules.get(modID);
 	if (!mod) return undefined;
