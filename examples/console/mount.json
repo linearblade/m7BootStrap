@@ -1,8 +1,8 @@
 {
     "items": [
 	{
-	    "id": "style",
-	    "container": "style-console",
+	    "id": "style-console",
+	    "container": "style",
 	    "selector": "head",
 	    "method": "append"
 	},
