@@ -32,7 +32,7 @@ function appendToConsole(text, type) {
 }
 
 export function init(){
-
+    console.warn('loading console now');
     const consoleBox = document.getElementById('console');
     const consoleInput = document.getElementById('console-input');
     const consoleBody = document.getElementById('console-body');
