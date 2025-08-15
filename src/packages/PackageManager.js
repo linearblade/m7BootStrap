@@ -131,7 +131,7 @@ export class PackageManager {
     
     _getSymbolicFunction(entry, bind = false) {
 	if (typeof entry !== 'string' || entry ==='') return undefined;
-	const [modID, ...rest] = a.split('.');
+	const [modID, ...rest] = entry.split('.');
 	const fnPath = rest.join('.');
 
 	//const [modID, fnPath] = entry.split('.', 2);
