@@ -3,8 +3,10 @@
     "title": "Debug Console",
     "assets": [
 	{ "id": "layout", "type": "html", "url": "layout.html" },
-	{ "id": "style",  "type": "css",  "url": "style.css" },
-        { "id": "mount",  "type": "mount", "url": "mount.json" }
+	{ "id": "style-console",  "type": "css",  "url": "style.css" },
+	{ "id": "style-button",  "type": "css",  "url": "button.css" },
+        { "id": "mount",  "type": "mount", "url": "mount.json" },
+	{ "id": "tildeBtn", "type": "html", "url": "console/button.html" }
     ],
     "modules": [
 	{ "id": "logic", "type": "js", "url": "logic.js" }
