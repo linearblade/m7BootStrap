@@ -9,5 +9,5 @@
     "modules": [
 	{ "id": "logic", "type": "js", "url": "logic.js" }
     ],
-    "run": ["~logic.init"],
+    "run": ["~logic.init"]
 }
