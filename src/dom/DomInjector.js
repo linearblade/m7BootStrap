@@ -64,9 +64,11 @@ export default class DomInjector {
 	const el = document.createElement(tag);
 	// For <template> we should write into its content fragment
 	if (el.tagName.toLowerCase() === 'template') {
-	    el.content.append(document.createTextNode(String(text)));
+	    //el.content.append(document.createTextNode(String(text)));
+	    el.innerHTML = String(text);
 	} else {
-	    el.textContent = String(text);
+	    el.innerHTML = String(text);
+	    //el.textContent = String(text);
 	}
 	return el;
     }
