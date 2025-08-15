@@ -1,3 +1,11 @@
+//this module does not represent my finest day, rather the end of the day, at 3am and a great desire to sleep.
+//in the event I forget to clean this up later, and you find yourself wondering why o why is this some fugly code; please humbly accept my apologies :)
+
+let consoleBox = null;
+let consoleInput = null;
+let consoleBody = null;
+let consoleSubmit = null;
+
 // Handle command execution
 function executeCommand() {
     const cmd = consoleInput.value.trim();
@@ -33,10 +41,10 @@ function appendToConsole(text, type) {
 
 export function init(){
     console.warn('loading console now');
-    const consoleBox = document.getElementById('console');
-    const consoleInput = document.getElementById('console-input');
-    const consoleBody = document.getElementById('console-body');
-    const consoleSubmit = document.getElementById('console-submit');
+     consoleBox = document.getElementById('console');
+     consoleInput = document.getElementById('console-input');
+     consoleBody = document.getElementById('console-body');
+     consoleSubmit = document.getElementById('console-submit');
 
     // Toggle console on tilde (`) key
     document.addEventListener('keydown', (e) => {
