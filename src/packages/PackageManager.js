@@ -138,7 +138,7 @@ export class PackageManager {
     
     _getSymbolicFunction(entry, bind = false) {
 	if (typeof entry !== 'string' || entry ==='') return undefined;
-	const { modID, fnPath } = parseSymbol(entry);
+	const { modID, fnPath } = this._parseSymbol(entry);
 	//const [modID, fnPath] = entry.split('.', 2);
 	const mod = this.modules.get(modID);
 	if (!mod) return undefined;
