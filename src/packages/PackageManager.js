@@ -149,14 +149,7 @@ export class PackageManager {
     
     _getSymbolicFunction(entry, bind = false) {
 	if (typeof entry !== 'string' || entry ==='') return undefined;
-	/*
-	const parts = entry.split('.');
-	const pkgID = parts.shift();   // "ui:console"
-	const localMod = parts.shift();   // "logic"
-	const modID = `${pkgID}.${localMod}`;
-	const fnPath = parts.join('.'); // "init" or "init.something"
-	*/
-	const { modID, fnPath } = parseSymbol(entry);
+	const { modID, fnPath } = this._parseSymbol(entry);
 	//const [modID, fnPath] = entry.split('.', 2);
 	const mod = this.modules.get(modID);
 	if (!mod) return undefined;
