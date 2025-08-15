@@ -8,6 +8,7 @@ let consoleSubmit = null;
 
 // Handle command execution
 function executeCommand() {
+    console.warn(consoleBox,consoleInput,consoleBody, consoleSubmit);
     const cmd = consoleInput.value.trim();
     if (!cmd) return;
 
@@ -45,7 +46,7 @@ export function init(){
      consoleInput = document.getElementById('console-input');
      consoleBody = document.getElementById('console-body');
      consoleSubmit = document.getElementById('console-submit');
-
+    console.warn(consoleBox,consoleInput,consoleBody, consoleSubmit);
     // Toggle console on tilde (`) key
     document.addEventListener('keydown', (e) => {
 	if (e.key === '`') {
