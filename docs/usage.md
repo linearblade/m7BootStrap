@@ -37,7 +37,7 @@ const resources = [
 ];
 
 // Load all (dependencies are resolved automatically)
-const ok = await bootstrap.load(resources, onLoad, onError, opts);
+const ok = await bootstrap.load(resources,{load: onLoad, error:onError});
 if (!ok) {
   console.error("Boot failed");
 }

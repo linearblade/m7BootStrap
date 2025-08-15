@@ -76,7 +76,7 @@ const resources = [
 ];
 
 // Load packages
-await bootstrap.load(resources, ["#runner.mount"]);
+await bootstrap.load(resources, {load:["#runner.mount"]});
 
 // Later, unload
 await bootstrap.unload(
