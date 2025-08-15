@@ -6,7 +6,7 @@
 	{ "id": "style-console",  "type": "css",  "url": "style.css" },
 	{ "id": "style-button",  "type": "css",  "url": "button.css" },
         { "id": "mount",  "type": "mount", "url": "mount.json" },
-	{ "id": "tildeBtn", "type": "html", "url": "console/button.html" }
+	{ "id": "button", "type": "html", "url": "button.html" }
     ],
     "modules": [
 	{ "id": "logic", "type": "js", "url": "logic.js" }
