@@ -9,7 +9,7 @@
 	{
 	    "id": "layout",
 	    "container": "div",
-	    "dissolve":true,
+	    "dissolve":false,
 	    "selector": "body",
 	    "method": "append",
 	    "attrs": {
