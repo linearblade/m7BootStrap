@@ -127,6 +127,15 @@ export class PackageManager {
 	return true;
     }
 
+
+    _parseSymbol(entry) {
+	const s = String(entry).trim();
+	const dot = s.indexOf('.');
+	const modID = dot === -1 ? s : s.slice(0, dot);       // "ui:console/logic"
+	const fnPath = dot === -1 ? null : s.slice(dot + 1);  // "init" (or "init.sub")
+	return { modID, fnPath };
+    }
+    /*
     _parseSymbol(entry) {
         const [pkgMod, ...fnParts] = String(entry).split('.');
         //const [modID, ...rest] = entry.split('.');
@@ -136,7 +145,7 @@ export class PackageManager {
             modID: pkgMod,      // "ui:console/logic"
             fnPath: fnParts.join('.') || null,  // "init" or "init.sub"
         };
-    }
+    }*/
     
     _getSymbolicFunction(entry, bind = false) {
 	if (typeof entry !== 'string' || entry ==='') return undefined;
