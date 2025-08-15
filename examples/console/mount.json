@@ -1,19 +1,20 @@
 {
-  "items": [
-    {
-      "id": "style",
-      "container": "style",
-      "selector": "head",
-      "method": "append"
-    },
-    {
-      "id": "layout",
-      "container": "html",
-      "selector": "body",
-      "method": "append",
-      "attrs": {
-        "id": "console-layout"
-      }
-    }
-  ]
+    "items": [
+	{
+	    "id": "style",
+	    "container": "style",
+	    "selector": "head",
+	    "method": "append"
+	},
+	{
+	    "id": "layout",
+	    "container": "div",
+	    "dissolve":true,
+	    "selector": "body",
+	    "method": "append",
+	    "attrs": {
+		"id": "console-layout"
+	    }
+	}
+    ]
 }
