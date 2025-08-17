@@ -40,7 +40,7 @@ export class ConsoleUI {
 	if (!this.box || !this.input || !this.body || !this.submit) {
 	    console.warn(
 		"[ConsoleUI] Missing DOM nodes. Expected ids:",
-		this.ids
+		this.ids,this
 	    );
 	    return this;
 	}
@@ -159,7 +159,9 @@ export class ConsoleUI {
 }
 
 // --- Singleton helpers ---
-
+export function teapot(){
+    console.warn('i am a teapot');
+}
 export function init(options) {
     if (_instance) return _instance;
     _instance = new ConsoleUI(options).init();
@@ -167,6 +169,7 @@ export function init(options) {
 }
 
 export function destroy() {
+    console.warn('tearing down console');
     if (_instance) {
 	_instance.destroy();
 	_instance = null;

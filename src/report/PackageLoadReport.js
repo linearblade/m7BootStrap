@@ -20,10 +20,11 @@ export default class PackageLoadReport {
 
 	// options/meta
 	this.options = {};
+	this.hooks = {pre:[],post:[],idle:[]};
 	this.hooksRequested = false;
 	this.hooksRan = false;
 	this.hookSuccess = null;
-
+	
 	// results
 	this.modules = null;   // moduleReport
 	this.assets  = null;   // assetReport
@@ -95,6 +96,9 @@ export default class PackageLoadReport {
     noteError(err) {
 	this.errors.push(err instanceof Error ? err.message : err);
 	return this;
+    }
+    noteHooks(hooks){
+	this.hooks = hooks;
     }
 
     // --- views ---------------------------------------------------------------

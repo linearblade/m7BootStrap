@@ -75,18 +75,24 @@ export class PackageManager {
 	report.noteModules(moduleReport).noteAssets(assetReport);
 	
 	// Cache the definition
+	pkg.__meta = {	    hooks	};
 	this.data.packages.set(lid, pkg);
 
-
-	if(moduleReport.success && hooks){
-	    const hookSuccess = await this._runHooks(pkg,'run',{pkg,report});
+	if (hooks) {
+	    const key = moduleReport.success && assetReport.success?'Load':'Error';
+	    //console.warn("have hooks,",key);
+	    const hookSuccess = await this._runHooksFromPackage(pkg,`package${key}`,{pkg,report});
 	    report.noteHooksResult(hookSuccess);
 	}
+
 
 	const [runner,rtype] = moduleReport.success && assetReport.success
 	      ? [loadHandler,'LOAD']
 	      : [errorHandler,'ERROR'];
 	report.noteRunner(runner);
+
+	
+	
         const handlerResult = await this.bootstrap._runHandlers(runner, {pkg,report}, `[PACKAGE-${rtype} - ${pkg.id}]`,pkg.id);
 	report.noteHandlersResult(handlerResult);
 	//this.data.package_setLoaded(lid);
@@ -106,22 +112,28 @@ export class PackageManager {
      * @param {boolean} [opts.keepModules=false]  - Keep modules & metadata
      * @returns {{ok:boolean, removedAssets:string[], removedModules:string[]}}
      */
-    unload(pkgId, { keepAssets = false, keepModules = false } = {}) {
+    async unload(pkgId, { keepAssets = false, keepModules = false,hooks } = {}) {
 	if (!pkgId || !this.isLoaded(pkgId)) return false;
 	const pkg = this.data.packages.get(pkgId);
 	if (!pkg)  return false;
-	
-	// 1) remove assets for this package (unless kept)
+	//look up whether hooks was previously defined and use that if not specified.
+	if (hooks === undefined && pkg.__meta.hooks) hooks = pkg.__meta.hooks;
+
+	// 1) run hooks first! otherwise you might unload the package
+	if (hooks){
+	    const hookSuccess = await this._runHooksFromPackage(pkg,'packageUnload',{pkg});
+	}
+
+	// 2) remove assets for this package (unless kept)
 	if (!keepAssets) {
 	    this.assets.unload(pkgId);
 	}
 
-	// 2) remove modules for this package (unless kept)
+	// 3) remove modules for this package (unless kept)
 	if (!keepModules) {
 	    this.modules.unload(pkgId);
 	}
-	
-	// 3) finally drop the package record itself
+	// 4) finally drop the package record itself
 	this.data.packages.delete(pkgId);
 	
 	return true;
@@ -162,13 +174,71 @@ export class PackageManager {
 	return typeof fn === 'function' ? fn : undefined;
     }
 
-    async _runHooks(pkg,type='run',ctx) {
-        const runner = pkg?.[type] ?? null;
+
+    async _runHooksFromPackage(pkg,type='load',ctx) {
+        const runner = pkg?.hooks?.[type] ?? null;
         if (!runner || !Array.isArray(runner) ) return true;
         return await this.bootstrap._runHandlers(runner, ctx, `[PACKAGE-HOOK] [${type}] ${pkg.id}`,pkg.id);
     }
+    async runHooks(pkg,runList = [],ctx) {
+        return await this.bootstrap._runHandlers(runList, ctx, `[PACKAGE-HOOK] ['pre mount'] ${pkg.id}`,pkg.id);
+    }
     
+    // split a package's run list into phases
+    _partitionRuns(runList = []) {
+	const out = { pre: [], post: [], idle: [] };
+
+	// Accept some synonyms so package authors have wiggle room
+	const PRE   = new Set(['pre', 'premount', 'pre-mount', 'postload', 'post-load']);
+	const POST  = new Set(['post', 'postmount', 'post-mount', 'mount']); // default bucket
+	const IDLE  = new Set(['idle']);
+
+	for (const h of runList) {
+	    if (!h) continue;
+
+	    const ds = this.bootstrap._destructureFunctionResource(h);
+	    if (!ds || !ds.fn) continue;                 // skip malformed
+
+	    const w = (ds.when == null ? 'post' : String(ds.when)).trim().toLowerCase();
+
+	    if (PRE.has(w)) {
+		out.pre.push(ds);
+	    } else if (IDLE.has(w)) {
+		out.idle.push(ds);
+	    } else if (POST.has(w)) {
+		out.post.push(ds);
+	    } else {
+		out.post.push(ds);
+	    }
+	}
+	return out;
+    }
+
     
+    d_partitionRuns(runList = []) {
+	const out = { pre: [], post: [], idle: [] };
+	const preVals  = ['postload', 'premount','pre'];
+	const idleVals = ['idle'];
+	const postVals = ['post'];
+
+	for (const h of runList) {
+	    if (!h) continue;
+	    const ds = this.bootstrap._destructureFunctionResource(h);
+	    const when = ds?.when;
+	    if(!when) { // majority use case
+		out.post.push(ds);
+	    }else if (preVals.includes(when ) ){
+		out.pre.push(ds);
+	    }else if (postVals.includes(when) ) {
+		out.post.push(ds);
+	    }else if (idleVals.includes(when) ) {
+		out.idle.push(ds);
+	    }else {
+		out.post.push(ds);
+	    }
+	}
+	return out;
+    }
 
 
 

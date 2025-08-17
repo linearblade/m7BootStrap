@@ -13,12 +13,14 @@
  *   await bootstrap.loadScene("scene:chess");
  **/
 import concurrencyLimiter from './utils/concurrencyLimiter.js';
-import Repo           from './repo/Repo.js';
-import PackageManager from './packages/PackageManager.js';
-import domInstall     from './dom/index.js' // for asset tracking/injection later
-import MountManager   from './mount/MountManager.js';
+import Repo                from './repo/Repo.js';
+import PackageManager      from './packages/PackageManager.js';
+import domInstall          from './dom/index.js' // for asset tracking/injection later
+import MountManager        from './mount/MountManager.js';
 import BootStrapLoadReport from './report/BootStrapLoadReport.js';
-import Runners        from './runners/Runners.js';
+import PackageLoadReport   from './report/PackageLoadReport.js';
+import Runners             from './runners/Runners.js';
+import deepMerge           from './utils/deepMerge.js';
 export class BootStrap {
     /**
      * Initializes the BootStrap controller.
@@ -27,7 +29,7 @@ export class BootStrap {
      * @param {Object} options - Boot configuration
      * @param {Object} [options.repo={}] - Initial repo configuration
      */
-    constructor(net, { repo = {} } = {}) {
+    constructor(net, { repo = {} ,load = {}, unload = {}} = {}) {
         if (!net) {
             throw new Error("BootStrap requires a valid Net instance");
         }
@@ -40,8 +42,24 @@ export class BootStrap {
         this.dom      = domInstall(this);
 	this.mount    = new MountManager(this);
 	this.runners = new Runners(this);
+	this.defaultLoadOpts   = null;
+	this.defaultUnloadOpts = null;
+	this.setDefaultLoadOpts(load);
+	this.setDefaultUnloadOpts(unload);
     }
+    setDefaultLoadOpts(opts = {},merge=false){
+	if (typeof opts !== 'object'){
+	    opts = {};
+	}
+	this.defaultLoadOpts = merge?deepMerge(this.defaultLoadOpts,opts):deepMerge({},opts);;
+    }
+    setDefaultUnloadOpts(opts = {},merge=false){
+	if (typeof opts !== 'object'){
+	    opts = {};
+	}
 
+	this.defaultUnloadOpts = merge?deepMerge(this.defaultUnloadOpts,opts):deepMerge({},opts);
+    }
 
     /**
      * Load and resolve one or more package resources (e.g. scene, mount, engine).
@@ -53,6 +71,8 @@ export class BootStrap {
      * @returns {Promise<boolean>} True if all succeeded, false otherwise.
      */
     async load(resources, options = {}) {
+	options = deepMerge(this.defaultLoadOpts, options || {});
+	console.log(options);
 	const limit        = options?.limit ?? 8;
 	const onLoad = options?.load  ?? null;
 	const onFail = options?.error ?? null;
@@ -77,13 +97,14 @@ export class BootStrap {
 	    limiter(async () => {
 		try {
 		    const pkgReport = await this._loadPackage(def, options);
+		    report.addPackageReport(pkgReport);
 		    if (!pkgReport.success) {
 			errors.push({ def, err: 'check console...' });
 			const errStruct =  { id: def.id, ok: false,def,err:'non throwable error', comment: `package loading error for ${def.id}` };
 			report.noteError(errStruct);
 			return errStruct;
 		    }
-		    report.addPackageReport(pkgReport);
+
 		    return { id: def.id, ok: true };
 		} catch (err) {
 		    console.error(err);
@@ -96,12 +117,17 @@ export class BootStrap {
 	);
 
 	const allStats = await Promise.all(tasks);
+
+	//const currentAssets = this.packages.data.getAssets();
 	
-	const currentAssets = this.packages.data.getAssets();
 	report.finalize();
-	const [runner,rtype] = report.success
-	      ? [onLoad,'LOAD']
-	      : [onFail,'ERROR'];
+	const [runner,rtype,phase] = report.success
+	      ? [onLoad,'LOAD','load']
+	      : [onFail,'ERROR','error'];
+
+
+	await this.handlePackageHooks(report, phase, 'Prepend',options);
+
 	await this._runHandlers(
 	    runner,
 	    {
@@ -110,11 +136,49 @@ export class BootStrap {
 		err : errors
 	    },`[BOOTSTRAP-${rtype}]`
 	);
+
+	await this.handlePackageHooks(report, phase, 'Append',options);
+	
 	
 
 	return report;
     }
 
+
+    async handlePackageHooks(bootStrapReport, phase /* 'load'|'error' */, pos /* 'Prepend'|'Append' */,options) {
+
+	if (!(bootStrapReport instanceof BootStrapLoadReport)) {
+	    console.error('report is not a valid BootStrapLoadReport', bootStrapReport);
+	    return false;
+	}
+
+	const key = `${phase}${pos}`; // e.g., 'loadPrepend', 'errorAppend'
+	const pkgReports = bootStrapReport.packages ?? [];
+	let ranAny = false;
+	//console.log(`${phase} - ${pos}`,pkgReports);
+	for (const pkgReport of pkgReports) {
+
+	    if (!(pkgReport instanceof PackageLoadReport)) {
+		console.warn('report is not a valid PackageLoadReport', pkgReport);
+		continue;
+	    }
+	    if(!pkgReport.hooksRequested)
+		continue;
+	    
+	    const pkg = pkgReport.pkg;
+	    if (!pkg) continue;
+
+	    const handlers = pkg?.hooks?.[key];
+	    if (!handlers) continue;
+	    console.warn('handlers', handlers);
+	    // Executes per package, in declared order
+	    await this.packages.runHooks(pkg, handlers, { pkg, report: pkgReport });
+	    ranAny = true;
+	}
+	return ranAny;
+    }
+
+    
     /**
      * Internal helper: resolves and loads a package from a resource string or object.
      *
@@ -165,6 +229,7 @@ export class BootStrap {
 	const env = {};
 	for (let i = 0; i < list.length; i++) {
             const rs = this._destructureFunctionResource(list[i]);
+	    //console.warn('destructured:', rs,list[i]);
 	    if (!rs) {
 		console.warn(`[BootStrap] Handler error for [${label}] position [${i}]: could not parse handler`, list[i]);
 		continue;
@@ -191,7 +256,7 @@ export class BootStrap {
 	    }
 	    
             if (typeof fn !== 'function') {
-		console.warn(`[BootStrap] Handler error for [${label}] position [${i}]: function does not exist: ${rs.original}`);
+		console.warn(`[BootStrap] Handler error for [${label}] position [${i}]: function does not exist: ${rs.original}`,rs);
 		continue;
 	    }
 	    try {
@@ -205,16 +270,66 @@ export class BootStrap {
 
 
     /**
-     * Unload one or more packages by ID or definition.
+     * Unload one or more previously loaded packages.
      *
-     * @param {string|object|Array<string|object>} resources   Package id(s) or defs previously loaded
-     * @param {Function|Function[]|string|string[]|object|object[]} [onDone=null]  Handler(s) after all unload succeed
-     * @param {Function|Function[]|string|string[]|object|object[]} [onError=null] Handler(s) on first failure
-     * @param {object} [options={}]  { ignoreMissing=true, cascade=false, ...custom }
-     * @returns {Promise<boolean>} True on success, false on first failure
+     * Behavior
+     * - Derives each package ID from a string entry or from `entry.id` / `entry.lid`.
+     * - Skips missing/not-loaded packages when `ignoreMissing === true`; otherwise records an error and aborts.
+     * - Optionally executes **package unload hooks** (see `options.hooks`) for each package.
+     * - Calls `this.packages.unload(id, { cascade, ...rest })` for each ID, collecting successes and errors.
+     * - After the loop:
+     *    • If any errors occurred → runs `options.error` handlers with `{ results, errors, options }`.
+     *    • If none → runs `options.load`  handlers with `{ results, errors, options, pkg: list }`.
+     *
+     * Hooks (per-package)
+     * - When hooks are enabled for a given package, its `hooks.packageUnload` list (if present) is executed
+     *   as part of the unload process (typically **before** the low-level unloader so code can clean up).
+     * - A hook that throws or returns `false` is recorded as an error with reason `"unload_hook_failed"`.
+     * - **Global unload pipeline** is not supported by design; only per-package unload hooks are considered.
+     *
+     * Hook enablement resolution
+     * - `options.hooks` controls whether unload hooks run for each package:
+     *   - `true`  → run `hooks.packageUnload` for every package.
+     *   - `false` → skip unload hooks entirely.
+     *   - `undefined` (default) → **auto**: for each package, inherit whether hooks were enabled
+     *     when that package was originally loaded; if it was loaded **with hooks**, unload hooks run.
+     *
+     * @typedef {Function|Function[]|string|string[]|object|object[]} HandlerSpec
+     * A handler or list of handlers accepted by the runtime. Strings/objects are resolved via the
+     * bootstrap’s handler parser (e.g., "#runners.*", "@pkg/mod.fn", "~mod.fn").
+     *
+     * @param {string|object|Array<string|object>} resources
+     *        Package id(s) or package def(s) that were previously loaded. Each entry may be an
+     *        ID string or an object with `id` (or `lid`) from which the ID is derived.
+     *
+     * @param {object} [options={}]
+     * @param {HandlerSpec} [options.load=null]
+     *        Handlers to run when all unload operations succeed (no errors recorded).
+     * @param {HandlerSpec} [options.error=null]
+     *        Handlers to run when one or more unload operations fail.
+     * @param {boolean}    [options.ignoreMissing=true]
+     *        When `true`, silently skip entries that are not currently loaded. When `false`,
+     *        encountering a not-loaded entry records an error and aborts further processing.
+     * @param {boolean}    [options.cascade=false]
+     *        Forwarded to the package manager; when supported, also unloads dependents/children.
+     * @param {boolean}    [options.hooks=undefined]
+     *        Controls per-package unload hooks:
+     *        - `true`  → run `hooks.packageUnload` for each package;
+     *        - `false` → skip hooks;
+     *        - `undefined` → inherit from the package’s original **load** hooks setting
+     *          (if the package was loaded with hooks enabled, unload hooks will run).
+     * @param {object}     [options.rest]
+     *        Any additional options are forwarded to `this.packages.unload(...)`.
+     *
+     * @returns {Promise<Array<{entry:any, id:(string|null),
+     *                         reason:('not_loaded'|'unload_failed'|'exception'|'unload_hook_failed'),
+     *                         err?:any}>>}
+     *          Resolves to the `errors` array (empty array means full success). Each error item includes
+     *          the original `entry`, the derived `id` (if any), a `reason`, and an optional `err`.
      */
-    async unload(resources, onDone = null, onError = null, options = {}) {
-	const { ignoreMissing = true, cascade = false, ...rest } = options;
+    async unload(resources, options = {}) {
+	options = deepMerge(this.defaultUnloadOpts, options || {});
+	const {load:onDone = null, error:onError=null, ignoreMissing = true, cascade = false, ...rest } = options || {}; //hooks handled below in package unload
 	const list = Array.isArray(resources)?resources:[resources];
 	//const list = this._normalizeResourceList(resources);
 	const results = [];
@@ -252,7 +367,7 @@ export class BootStrap {
 	}else {
 	    await this._runHandlers(onDone, { results, errors, options,pkg:list }, 'unload:onDone');
 	}
-	return errors.length === 0;
+	return errors;
     }
  
 
@@ -337,6 +452,8 @@ export class BootStrap {
 	}
 
 	if (typeof input === 'object' && input !== null && 'fn' in input) {
+	    if (input.original) //already been destructured.
+		return input;
             const parsed = this._destructureFunctionResource(input.fn);
             return {
 		...input,

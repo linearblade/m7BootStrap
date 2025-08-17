@@ -11,5 +11,13 @@
     "modules": [
 	{ "id": "logic", "type": "js", "url": "logic.js" }
     ],
-    "run": ["~logic.init"]
+    "hooks" : {
+	"packageLoad"  : ["#runners.mountPackage", "~logic.init"],
+	"packageError" : ["#runners.packageError"],
+	"packageUnload" :["~logic.destroy","#runners.unmountPackage"],
+	"loadPrepend"  :  null,
+	"loadAppend"   : null,
+	"errorPrepend" : "~logic.teapot",
+	"errorAppend"  : null
+    }
 }
