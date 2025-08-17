@@ -196,7 +196,7 @@ Options:
 | `cascade`       | boolean    | `false` | Remove dependencies as well as specified packages.       |
 | `keepAssets`    | boolean    | `false` | Keep assets mounted/registered instead of removing them. |
 | `keepModules`   | boolean    | `false` | Keep modules registered instead of clearing them.        |
-| `hooks`         | boolean|undefined    | `undefined` | run any hooks associated with the package. undefined = use whatever hooks value used when loading package     |
+| `hooks`         | boolean \| undefined    | `undefined` | run any hooks associated with the package. undefined = use whatever hooks value used when loading package     |
 | `error`         | fnResource | `null   | function resource list to handle errors                  |
 | `load`          | fnResource | `null   | function reousrce list to run have unload complete       |
 
