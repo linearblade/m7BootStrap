@@ -10,28 +10,79 @@ Each example is self-contained and demonstrates a specific concept or feature.
 ## 1. Basic Package Load
 
 ```js
+//adjust as necessary if you split the source from your docs.
 import Net from "./vendor/m7Fetch/src/index.js";
 import BootStrap from "./vendor/m7Bootstrap/BootStrap.js";
+import defaultLoadOpts   from "./vendor/m7BootStrap/src/defaults/defaultLoadOpts.js";
+import defaultUnloadOpts from "./vendor/m7BootStrap/src/defaults/defaultUnloadOpts.js";
+
 
 const net = new Net();
-const bootstrap = new BootStrap(net);
+//no default options
+//const bootstrap = new BootStrap(net);
+//use the default options to get granular breakdown of whats going on.
+const bootstrap = new BootStrap(net, {load: defaultLoadOpts, unload : defaultUnloadOpts} );
 
-const resources = [
-  { resource: "scene:chess", repo: ["/repo"] }
-];
-
-const success = await bootstrap.load(
-  resources,
-  {
-    load:  (sys, ctx) => console.log("Loaded:", ctx),
-    error:  (sys, ctx) => console.error("Error:", ctx)
+const report = await bootstrap.load('/vendor/m7BootStrap/examples/test/validateInstall/package.json',  {
+    load: (sys, ctx) => console.log("Loaded:", ctx),
+    error: (sys, ctx) => console.warn("Failed:", ctx)
   }
 );
 
-if (!success) {
+if (!report.success) {
   console.warn("One or more packages failed to load.");
 }
 ```
+
+A more advanced setup:
+
+head to [a basic console example](../../examples/console/example.html)
+```html
+  <script>
+    async function teardown(e){
+        const unrv = await bootstrap.unload('ui:console');
+        console.log(unrv);
+        document.querySelector("#load-button").style.display='';
+        document.querySelector("#unload-button").style.display='none';
+
+    }
+    async function load_console(e){
+
+        // you can override the defaults like so...
+        //const report = await bootstrap.load("/vendor/m7Bootstrap/examples/console/package.json",{load:["#runners.mount","stuff"],error: "badstuff",package:{hooks:true} });
+        const report = await bootstrap.load("/vendor/m7Bootstrap/examples/console/package.json",{package:{hooks:true} });
+        console.log(report);
+
+        document.querySelector("#load-button").style.display='none';
+        document.querySelector("#unload-button").style.display='';
+
+
+    }
+  </script>
+
+  <script type="module">
+    import Net               from "./vendor/m7Fetch/src/index.js";
+    import BootStrap         from "./vendor/m7BootStrap/src/BootStrap.js";
+    import defaultLoadOpts   from "./vendor/m7BootStrap/src/defaults/defaultLoadOpts.js";
+    import defaultUnloadOpts from "./vendor/m7BootStrap/src/defaults/defaultUnloadOpts.js";
+
+
+    const net = new Net();
+    const bootstrap = new BootStrap(net, {load: defaultLoadOpts, unload : defaultUnloadOpts} );
+
+    window.net = net;
+    window.bootstrap = bootstrap;
+    //you can change the defaults at any time like this.
+    //bootstrap.setDefaultLoadOpts(defaultLoadOpts);
+    //merge = true == merge the new opts with current;
+    //bootstrap.setDefaultLoadOpts(defaultLoadOpts,true);
+    //bootstrap.setDefaultUnloadOpts(defaultUnloadOpts);
+    load_console();
+  </script>
+```
+
+copy the example to your doc root (or whever, but you'll have to adjust your paths). you will find a basic console app which can be installed.
+
 
 ---
 

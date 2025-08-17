@@ -85,8 +85,8 @@ console.log("Boot status:", ok);
 
 more advanced setup , if you wish to use a central repository, or define the repo package by package as necessary.
 ```
-const ok = await bootstrap.load(
-  [{ resource: "scene:test", repo: ["/repo"] }],
+const loadReport = await bootstrap.load(
+  [{ resource: "test/validateInstall/package.json", repo: ["/vendor/m7BootStrap/examples"] }],
     {
     load: (sys, ctx) => console.log("Loaded:", ctx),
     error: (sys, ctx) => console.warn("Failed:", ctx)
