@@ -1,34 +1,37 @@
 // logic.js — test:validateInstall
 
 function init(sys,ctx) {
-    console.log(sys);
-  const root = document.getElementById("m7pkg-modal-root");
-  const modal = document.getElementById("m7pkg-modal");
+    const bootstrap = sys.bootstrap;
+    const root = document.getElementById("m7pkg-modal-root");
+    const modal = document.getElementById("m7pkg-modal");
 
-  if (root && modal) {
-    root.classList.remove("m7pkg-hidden");
-    modal.classList.add("is-open");
-  }
+    const unmount = ()=>{
+	bootstrap.unload('test:validateInstall');
+    }
+    if (root && modal) {
+	root.classList.remove("m7pkg-hidden");
+	modal.classList.add("is-open");
+    }
 
-  // Optional: hook up the unmount button for convenience
-  const btn = document.getElementById("m7pkg-unmount");
-  if (btn) {
-    btn.addEventListener("click", destroy, { once: true });
-  }
+    // Optional: hook up the unmount button for convenience
+    const btn = document.getElementById("m7pkg-unmount");
+    if (btn) {
+	btn.addEventListener("click", unmount, { once: true });
+    }
 }
 
 function destroy() {
-  const root = document.getElementById("m7pkg-modal-root");
-  const modal = document.getElementById("m7pkg-modal");
+    const root = document.getElementById("m7pkg-modal-root");
+    const modal = document.getElementById("m7pkg-modal");
 
-  if (modal) modal.classList.remove("is-open");
-  if (root) root.classList.add("m7pkg-hidden");
+    if (modal) modal.classList.remove("is-open");
+    if (root) root.classList.add("m7pkg-hidden");
 
-  // Remove the node entirely if you want to delete it from DOM
-  // if (root) root.remove();
+    // Remove the node entirely if you want to delete it from DOM
+    // if (root) root.remove();
 }
 
 export default {
-  init,
-  destroy,
+    init,
+    destroy,
 };
