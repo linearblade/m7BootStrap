@@ -62,7 +62,7 @@ const inlinePackage = {
     id: "allpurposemounter",
     assets: [{ id: "mountdoc", inline: true, content: { foo: "bar" } }],
     modules: [],
-    run: ["mountusMaximus"]
+    hooks: {packageLoad: ["mountusMaximus"]} 
   }
 };
 

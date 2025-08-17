@@ -40,7 +40,7 @@ Loads one or more packages, resolving dependencies, fetching resources, and exec
     * Global function name as string
     * Symbolic reference `"@pkg.module.fn"`
     * Local bootstrapper method reference (e.g., `"#runner.mount"`)
-  * `package.hooks` (boolean) — Run `run` hooks in loaded packages (default: `true`).
+  * `package.hooks` (boolean) — Run `hooks` in loaded packages (default: `true`).
 
 **Returns:**
 

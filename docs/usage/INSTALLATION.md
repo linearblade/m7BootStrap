@@ -56,9 +56,15 @@ If downloading manually:
 //adjust as necessary if you split the source from your docs.
 import Net from "./vendor/m7Fetch/src/index.js";
 import BootStrap from "./vendor/m7Bootstrap/BootStrap.js";
+import defaultLoadOpts   from "./vendor/m7BootStrap/src/defaults/defaultLoadOpts.js";
+import defaultUnloadOpts from "./vendor/m7BootStrap/src/defaults/defaultUnloadOpts.js";
+
 
 const net = new Net();
-const bootstrap = new BootStrap(net);
+//no default options
+//const bootstrap = new BootStrap(net);
+//use the default options to get granular breakdown of whats going on.
+const bootstrap = new BootStrap(net, {load: defaultLoadOpts, unload : defaultUnloadOpts} );
 ```
 
 ---

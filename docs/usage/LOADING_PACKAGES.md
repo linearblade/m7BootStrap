@@ -65,7 +65,7 @@ Options are passed as the **second** argument to `load()`. All provided options 
 | Path                  | Type    | Default | Notes                                                        |
 | --------------------- | ------- | ------- | ------------------------------------------------------------ |
 | `limit`               | integer | `8`     | Global concurrency cap for parallel loads.                   |
-| `package.hooks`       | boolean | `true`  | Run each package’s `run` hooks after load.                   |
+| `package.hooks`       | boolean | `true`  | Run each package’s `hooks` after load.                       |
 | `repo.circuitbreaker` | integer | `100`   | Safety cutoff for runaway or circular dependency traversal.  |
 | `repo.limit`          | integer | `limit` | Repo concurrency limit; falls back to global `limit`.        |
 | `module.limit`        | integer | `limit` | Module fetch/load concurrency limit.                         |
@@ -74,7 +74,7 @@ Options are passed as the **second** argument to `load()`. All provided options 
 
 \--------------------- | ------- | ------- | ----------------------------------------------------------- |
 \| `limit`               | integer | `8`     | Global concurrency cap for parallel loads.                  |
-\| `package.hooks`       | boolean | `true`  | Run each package’s `run` hooks after load.                  |
+\| `package.hooks`       | boolean | `true`  | Run each package’s `hooks` after load.                      |
 \| `repo.circuitbreaker` | integer | `100`   | Safety cutoff for runaway or circular dependency traversal. |
 \| `repo.limit`          | integer | `limit` | Repo concurrency limit; falls back to global `limit`.       |
 \| `assets.limit`        | integer | `limit` | Asset fetch concurrency limit; falls back to global `limit`.|
@@ -175,7 +175,7 @@ await bootstrap.load({
     id: "allpurposemounter",
     assets: [{ id: "mountinstructions", inline: true, content: { a: "b" } }],
     modules: [],
-    run: ["mountusMaximus"]
+    hooks: {packageLoad: ["mountusMaximus"] }
   }
 });
 ```

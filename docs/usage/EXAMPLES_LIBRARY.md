@@ -46,7 +46,7 @@ const inlinePkg = {
       { id: "mountinstructions", inline: true, content: { a: "b", nums: [1, 2, 3] } }
     ],
     modules: [],
-    run: ["mountusMaximus"]
+    hooks: {packageLoad: ["mountusMaximus"]}
   }
 };
 

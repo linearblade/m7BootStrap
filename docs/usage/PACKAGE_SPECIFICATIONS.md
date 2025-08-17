@@ -1,6 +1,4 @@
-← Back to [Usage Guide Index](TOC.md)
-
-# 📦 Package & Repo Specifications
+# 📦 Package & Repo Specifications (Updated)
 
 This section defines the structures used to describe **packages** and **repositories**, including their relationship, valid formats, and resolution rules.
 
@@ -62,7 +60,7 @@ A `repoResource` describes **where and how** to fetch a package.
 ```json
 {
   "url": "/repo",
-  "method": "post",          
+  "method": "post",
   "postData": { "foo": "bar" },
   "fetchOpts": { "cache": "no-store" }
 }
@@ -70,47 +68,21 @@ A `repoResource` describes **where and how** to fetch a package.
 
 ---
 
-## 4. functionResourceObject
+## 4. `functionResourceObject`
 
 A **functionResourceObject** is the normalized representation of a function handler input, ensuring consistent structure and metadata regardless of how the handler was originally specified.
 
-It is produced by parsing a function handler reference, which may be provided as:
+It may be:
 
-* A **direct function reference**
-* A **string identifier** (function name or symbolic reference)
-* A **configuration object** containing a `fn` field and optional metadata
+* Direct function reference
+* String identifier (`"myFunc"`)
+* Symbolic (`"@pkg.fn"`), bootstrapper-local (`"#runner.mount"`), or package-local (`"~logic.init"`) reference
+* Configuration object containing a `fn` field
 
-**Purpose**
-
-By converting any supported handler input into a standardized object, the loader can:
-
-* Identify whether the function is symbolic, package-local, or bootstrapper-local
-* Store the original input for reference
-* Track binding requirements
-* Maintain compatibility across handler formats
-
-**Structure**
-
-A normalized **functionResourceObject** includes at least:
-
-* `fn` — The function reference itself, or a string path to it
-* `bind` — Boolean indicating whether the function should be bound to a specific context (true for local `#` references)
-* `original` — The original input value as provided by the user
-* `symbolic` *(optional)* — True if the function reference is symbolic (prefixed with `@`)
-* `local` *(optional)* — True if the reference is bootstrapper-local (prefixed with `#`)
-* `pkgLocal` *(optional)* — True if the reference is package-local (prefixed with `~`)
-
-**Examples**
-
-| Input                                          | Normalized Output (key fields only)                                                |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `"@foo.bar"`                                   | `{ fn: "foo.bar", bind: false, symbolic: true, original: "@foo.bar" }`             |
-| `"myFunc"`                                     | `{ fn: "myFunc", bind: false, symbolic: false, original: "myFunc" }`               |
-| `() => {}`                                     | `{ fn: [Function], bind: false, original: "anonymous" }`                           |
-| `function namedFn() {}`                        | `{ fn: [Function: namedFn], bind: false, original: "namedFn" }`                    |
-| `{ fn: "@pkg.fn", bind: true, extra: "meta" }` | `{ fn: "pkg.fn", bind: true, symbolic: true, original: "@pkg.fn", extra: "meta" }` |
+See full details in [Function Resources](FUNCTION_RESOURCES.md).
 
 ---
+
 ## 5. Inline Package Structure
 
 An inline package definition is a fully self-contained package object.
@@ -121,24 +93,57 @@ When `resource` is an object, **no fetching occurs** — it is treated as alread
 ```json
 {
   "resource": {
-    "id": "allpurposemounter",
-    "title": "General purpose Mounting tool",
+    "id": "ui:console",
+    "title": "Debug Console",
     "assets": [
-      {
-        "id": "mountinstructions",
-        "inline": true,
-        "content": { "a": "b", "nums": [1, 2, 3] }
-      }
+      { "id": "layout", "type": "html", "url": "layout.html" },
+      { "id": "style-console", "type": "css", "url": "style.css" },
+      { "id": "style-button", "type": "css", "url": "button-square-dark.css" },
+      { "id": "mount", "type": "mount", "url": "mount.json" },
+      { "id": "button", "type": "html", "url": "button.html" }
     ],
-    "modules": [],
-    "run": ["mountusMaximus"]
+    "modules": [
+      { "id": "logic", "type": "js", "url": "logic.js" }
+    ],
+    "hooks": {
+      "packageLoad":   ["#runners.mountPackage", "~logic.init"],
+      "packageError":  ["#runners.packageError"],
+      "packageUnload": ["~logic.destroy", "#runners.unmountPackage"],
+      "loadPrepend":   null,
+      "loadAppend":    null,
+      "errorPrepend":  "~logic.teapot",
+      "errorAppend":   null
+    }
   }
 }
 ```
 
 ---
 
-## 6. Examples of Each Form
+## 6. Hooks
+
+Hooks replace the legacy `run` array. They allow packages to participate in lifecycle events.
+
+**Per-Package Hooks** (triggered for each package individually):
+
+* `packageLoad` — invoked when the package loads successfully.
+* `packageError` — invoked if the package fails to load.
+* `packageUnload` — invoked when the package is unloaded.
+
+**Append/Prepend Hooks** (merged into the bootstrap-level handler lists):
+
+* `loadPrepend`, `loadAppend` — modify the final load handler list passed to `bootstrap.load(...)`.
+* `errorPrepend`, `errorAppend` — modify the final error handler list.
+
+**Notes:**
+
+* Each hook entry accepts any valid `functionResourceObject`.
+* Append/prepend hooks are merged at runtime into the top-level load/error lists, allowing package-level customization without overriding global handlers【11†src/BootStrap.js†L71-L101】.
+* Handlers may be symbolic (`@`), local (`#`), or package-local (`~`).
+
+---
+
+## 7. Examples of Each Form
 
 **String form**
 
@@ -152,57 +157,37 @@ When `resource` is an object, **no fetching occurs** — it is treated as alread
 { "resource": "scene:chess", "repo": ["/repo"] }
 ```
 
-**Object + Inline package**
+**Object + Inline package (with hooks)**
 
 ```json
-{ "resource": { "id": "pkg1", "assets": [], "modules": [] } }
+{ "resource": { "id": "pkg1", "assets": [], "modules": [], "hooks": { "packageLoad": ["init"] } } }
 ```
 
 ---
 
-## 7. Resolution Rules
+## 8. Resolution Rules
 
-When loading a `packageResource`:
-
-1. **Inline object** — loaded immediately; `repo` is ignored.
-2. **String resource + repo** — loader combines repo base URL with resource string. If multiple repos are given, it will try each in sequence until one succeeds.
-3. **String resource without repo** — treated as a fully-qualified URL **or** a symbolic name resolved via defaults.
-4. **Duplicate detection** — loader normalizes `(type, stem, repos)` to avoid re-fetching the same package.
-
----
-
-## 8. Relationship Diagram
-![relationship diagramt](package_repo_relationship.png)
-
-```
-packageResource
- ├─ String  → URL or symbolic name
- └─ Object (packageResourceObject)
-      ├─ resource
-      │   ├─ String → URL/symbolic + optional repo
-      │   └─ Object → Inline package definition
-      └─ repo (optional)
-           ├─ String  → base URL
-           └─ Object  → { url, method, postData, fetchOpts }
-```
+1. Inline object → loaded immediately; `repo` ignored.
+2. String resource + repo → repo base URL combined with resource string.
+3. String resource without repo → treated as fully-qualified URL or symbolic name.
+4. Duplicate detection — `(type, stem, repos)` normalized to avoid re-fetching.
 
 ---
 
 ## 9. Validation Notes / Required Fields
 
-* `packageResourceObject.resource` is required and must be string or object.
-* **Inline package objects** must have:
+* `packageResourceObject.resource` is required.
+* Inline package objects must have:
 
   * `id` *(string)* — unique within runtime
-  * Optional: `assets` *(array)*, `modules` *(array)*, `run` *(array)*
-* `repoResource` objects must have `url` *(string)* if not a plain string.
-* Method names (`method`) are normalized to lowercase internally.
-* Loader does **not** validate asset/module schema — it trusts package definitions.
+  * Optional: `assets` *(array)*, `modules` *(array)*, `hooks` *(object)*
+* `repoResource` objects must have `url` if not a plain string.
+* Loader does not validate schema of assets/modules; it trusts definitions.
 
 ---
 
 **See Also**
 
-* **[Loading Packages](LOADING_PACKAGES.md)**
-* **[Mounting & Unmounting Packages](MOUNTING.md)**
-* Continue to **[Hooks & Handlers](HOOKS_AND_HANDLERS.md)** to action on your loads and unloads
+* [Loading Packages](LOADING_PACKAGES.md)
+* [Mounting & Unmounting Packages](MOUNTING.md)
+* [Hooks & Handlers](HOOKS_AND_HANDLERS.md)
