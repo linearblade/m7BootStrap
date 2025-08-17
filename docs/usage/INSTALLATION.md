@@ -74,9 +74,7 @@ const bootstrap = new BootStrap(net, {load: defaultLoadOpts, unload : defaultUnl
 Run a minimal test to confirm installation:
 
 ```js
-const ok = await bootstrap.load(
-  [{ resource: "scene:test", repo: ["/repo"] }],
-  {
+const report = await bootstrap.load('/vendor/m7BootStrap/examples/test/validateInstall/package.json',  {
     load: (sys, ctx) => console.log("Loaded:", ctx),
     error: (sys, ctx) => console.warn("Failed:", ctx)
   }
@@ -84,6 +82,18 @@ const ok = await bootstrap.load(
 
 console.log("Boot status:", ok);
 ```
+
+more advanced setup , if you wish to use a central repository, or define the repo package by package as necessary.
+```
+const ok = await bootstrap.load(
+  [{ resource: "scene:test", repo: ["/repo"] }],
+    {
+    load: (sys, ctx) => console.log("Loaded:", ctx),
+    error: (sys, ctx) => console.warn("Failed:", ctx)
+  }
+);
+```
+
 
 If you see `Loaded:` \[...] in the console, your installation is working.
 
