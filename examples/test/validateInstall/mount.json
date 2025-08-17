@@ -11,10 +11,7 @@
 	    "container": "div",
 	    "dissolve":true,
 	    "selector": "body",
-	    "method": "append",
-	    "attrs": {
-		"id": "console-layout"
-	    }
+	    "method": "append"
 	}
     ]
 }
