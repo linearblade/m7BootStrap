@@ -75,7 +75,7 @@ export class PackageManager {
 	report.noteModules(moduleReport).noteAssets(assetReport);
 	
 	// Cache the definition
-	pkg.__meta = {	    hooks	};
+	pkg.__meta = {...(pkg?.__meta??{}), hooks };
 	this.data.packages.set(lid, pkg);
 
 	if (hooks) {

@@ -1,0 +1,57 @@
+<head>
+  <!--
+      copy this example into your index html location, or edit the paths for the modules.
+    -->
+  <script>
+    async function teardown(e){
+	const unrv = await bootstrap.unload('ui:console');
+	console.log(unrv);
+	document.querySelector("#load-button").style.display='';
+	document.querySelector("#unload-button").style.display='none';
+	
+    }
+    async function load_console(e){
+
+	// you can override the defaults like so...
+	//const report = await bootstrap.load("/vendor/m7Bootstrap/examples/console/package.json",{load:["#runners.mount","stuff"],error: "badstuff",package:{hooks:true} });
+	const report = await bootstrap.load("/vendor/m7Bootstrap/examples/console/package.json",{package:{hooks:true} });
+	console.log(report);
+
+	document.querySelector("#load-button").style.display='none';
+	document.querySelector("#unload-button").style.display='';
+
+	
+    }
+  </script>
+
+  <script type="module">
+    import Net               from "./vendor/m7Fetch/src/index.js";
+    import BootStrap         from "./vendor/m7BootStrap/src/BootStrap.js";
+    import defaultLoadOpts   from "./vendor/m7BootStrap/src/defaults/defaultLoadOpts.js";
+    import defaultUnloadOpts from "./vendor/m7BootStrap/src/defaults/defaultUnloadOpts.js";
+
+
+    const net = new Net();
+    const bootstrap = new BootStrap(net, {load: defaultLoadOpts, unload : defaultUnloadOpts} );
+
+    window.net = net;
+    window.bootstrap = bootstrap;
+    //you can change the defaults at any time like this.
+    //bootstrap.setDefaultLoadOpts(defaultLoadOpts);
+    //merge = true == merge the new opts with current;
+    //bootstrap.setDefaultLoadOpts(defaultLoadOpts,true);
+    //bootstrap.setDefaultUnloadOpts(defaultUnloadOpts);
+    load_console();
+  </script>
+</head>
+
+<body>
+  <br><br>
+  <div style="display:flex; flex-direction:column;margin-top:10px;align-items:center">
+  <h1>
+    console loading example. press tilde or click the tilde button in the top right corner
+  </h1>
+
+  <button id="unload-button" onclick="teardown(this)" style="max-width:150px">Tear down console</button>
+  <button id="load-button" onclick="load_console(this)" style="max-width:150px">load console</button>
+</body>

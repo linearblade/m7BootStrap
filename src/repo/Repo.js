@@ -276,6 +276,7 @@ export class Repo {
 	}
 
 	if (key && result) {
+	    //console.log('caching', JSON.parse(JSON.stringify(result) ) );
             this._resolveCache.set(key, result);
 	}
 

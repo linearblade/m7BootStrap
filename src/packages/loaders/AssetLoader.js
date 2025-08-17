@@ -89,7 +89,7 @@ export class AssetLoader {
 	    return report.finalize();
 	}
 	const base = pkg.__meta?.base || '';
-	
+	//console.log(`base ... '${base}'`,pkg, pkg?.__meta?.base);
 	const loadList = [];
 	for (const asset of assets) {
 	    const fullID = this.controller.utils.scopedKey(pkg.id, asset.id);

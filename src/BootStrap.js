@@ -72,7 +72,7 @@ export class BootStrap {
      */
     async load(resources, options = {}) {
 	options = deepMerge(this.defaultLoadOpts, options || {});
-	console.log(options);
+
 	const limit        = options?.limit ?? 8;
 	const onLoad = options?.load  ?? null;
 	const onFail = options?.error ?? null;
@@ -85,6 +85,7 @@ export class BootStrap {
 	const errors  = [];
 	const report = new BootStrapLoadReport();
 	const {list:plist, report:repoReport}  = await this.repo.buildDependencyGraph(resources,options);
+	
 	report.noteRepoReport(repoReport);
 	if(!repoReport.success){
 	    console.error(repoReport.summary() );
