@@ -2,7 +2,8 @@
 
 M7BootStrap is a modular runtime package loading and mounting toolkit, designed to work across a wide range of applications.It provides a clean, extensible framework for resolving package dependencies, staging runtime assets and modules, and integrating them into a running system — with an emphasis on composability, clarity, and long-term maintainability.
 
-Don’t waste cycles building loaders to load loaders.Let BootStrap handle dependency resolution, resource loading, and lifecycle wiring — so you can focus on the actual application logic.
+
+> 🚨 **v1.1 released** — documentation in progress; current docs are _semi-unreliable_.
 
 ✅ Version 1 Ready
 
