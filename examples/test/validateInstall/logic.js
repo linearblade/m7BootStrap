@@ -1,6 +1,7 @@
 // logic.js — test:validateInstall
 
-function init() {
+function init(sys,ctx) {
+    console.log(sys);
   const root = document.getElementById("m7pkg-modal-root");
   const modal = document.getElementById("m7pkg-modal");
 
