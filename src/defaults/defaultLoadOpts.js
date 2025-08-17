@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2025 m7.org
+ * License: MTL-10 (see LICENSE.md)
+ */
 function assetItemLoad(...args){	console.warn ('asset item load hook', args);	}
 function assetItemError(...args){       console.warn (' asset item error hook', args);	}
 function assetLoad(...args){            console.warn ('assets loaded successfully',args); }
