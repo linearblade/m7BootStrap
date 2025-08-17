@@ -88,6 +88,9 @@ copy the example to your doc root (or whever, but you'll have to adjust your pat
 
 ## 2. Loading with Inline Package
 
+Packages may be inlined to avoid downloading. After You've built a setup, you may wish to formalize it and skip the downloading step. Extremely enterprising individuals might even write their own bundles and
+destructure them on their own.
+
 ```js
 const inlinePkg = {
   resource: {
@@ -107,6 +110,9 @@ await bootstrap.load([inlinePkg], {load, error});
 ---
 
 ## 3. Custom Post-Load Handling
+
+There are built in asset mounting tools for static html assets. However any module assignments or rigging must be handled within the load handlers or outside after the load has completed.
+the bootstrap instance may be found within sys.bootstrap as well as any other relevant information related to that load.
 
 ```js
 const onLoad = [
@@ -128,12 +134,18 @@ await bootstrap.load(resources, {load:onLoad, error:onError});
 
 ## 4. Unloading Packages
 
+Packages loaded will inherit the hook status from the inital load. That is, if you looked a package and allowed hooks, you dont have to specify hooks = true
+if you set hooks to false, any customized package unmounting functionality will not be run.
+
 ```js
 await bootstrap.unload(
   ["scene:chess"],
-  ["#runner.unmount", cleanupModules],
-  ["jobFail"],
-  { ignoreMissing: true }
+{
+   load:  ["#runner.unmount", cleanupModules],
+   error: ["jobFail"],
+   ignoreMissing: true,
+   hooks: undefined //could be true or false as well
+}
 );
 ```
 
