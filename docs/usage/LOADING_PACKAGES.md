@@ -185,20 +185,23 @@ await bootstrap.load({
 ## Unload
 
 ```ts
-async unload(resources, onDone?, onError?, options?): Promise<boolean>
+async unload(resources, options?): Promise<boolean>
 ```
 
 Options:
 
 | Option          | Type    | Default | Description                                              |
 | --------------- | ------- | ------- | -------------------------------------------------------- |
-| `ignoreMissing` | boolean | `true`  | Ignore missing packages.                                 |
-| `cascade`       | boolean | `false` | Remove dependencies as well as specified packages.       |
-| `keepAssets`    | boolean | `false` | Keep assets mounted/registered instead of removing them. |
-| `keepModules`   | boolean | `false` | Keep modules registered instead of clearing them.        |
+| `ignoreMissing` | boolean    | `true`  | Ignore missing packages.                                 |
+| `cascade`       | boolean    | `false` | Remove dependencies as well as specified packages.       |
+| `keepAssets`    | boolean    | `false` | Keep assets mounted/registered instead of removing them. |
+| `keepModules`   | boolean    | `false` | Keep modules registered instead of clearing them.        |
+| `hooks`         | boolean|undefined    | `undefined` | run any hooks associated with the package. undefined = use whatever hooks value used when loading package     |
+| `error`         | fnResource | `null   | function resource list to handle errors                  |
+| `load`          | fnResource | `null   | function reousrce list to run have unload complete       |
 
 > To unmount assets, include `"#runner.unmount"` in `onDone`.
-
+> ex: bootstrap.unload('my:module', {load:'#runners.unmount'}
 ---
 
 **Related Topics:**
