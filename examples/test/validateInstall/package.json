@@ -1,0 +1,21 @@
+{
+    "id": "test:validateInstall",
+    "title": "validate m7Bootstrap installation",
+    "assets": [
+	{ "id": "layout", "type": "html", "url": "layout.html" },
+	{ "id": "style",  "type": "css",  "url": "style.css" },
+        { "id": "mount",  "type": "mount", "url": "mount.json" },
+    ],
+    "modules": [
+	{ "id": "logic", "type": "js", "url": "logic.js" }
+    ],
+    "hooks" : {
+	"packageLoad"  : ["#runners.mountPackage", "~logic.init"],
+	"packageError" : ["#runners.packageError"],
+	"packageUnload" :["~logic.destroy","#runners.unmountPackage"],
+	"loadPrepend"  : null,
+	"loadAppend"   : null,
+	"errorPrepend" : null,
+	"errorAppend"  : null
+    }
+}

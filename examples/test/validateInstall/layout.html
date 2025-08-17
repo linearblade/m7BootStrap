@@ -1,0 +1,32 @@
+<!-- Package: test:validateInstall -->
+<!-- This layout only provides structure; visibility is controlled via CSS classes. -->
+<div id="m7pkg-modal-root" class="m7pkg-root m7pkg-hidden" data-package-id="test:validateInstall">
+  <!-- Backdrop/overlay -->
+  <div class="m7pkg-overlay" aria-hidden="true"></div>
+
+  <!-- Modal dialog -->
+  <section
+    id="m7pkg-modal"
+    class="m7pkg-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="m7pkg-title"
+    aria-describedby="m7pkg-desc"
+  >
+    <header class="m7pkg-header">
+      <h2 id="m7pkg-title" class="m7pkg-title">Installation Validation</h2>
+    </header>
+
+    <div id="m7pkg-desc" class="m7pkg-body">
+      <p>If you can see this modal after running the validation logic, your bootstrap install is working.</p>
+      <p class="m7pkg-meta">Package ID: <code>test:validateInstall</code></p>
+    </div>
+
+    <footer class="m7pkg-footer">
+      <!-- This button is here for convenience; wire it in logic.js to unmount/destroy. -->
+      <button type="button" id="m7pkg-unmount" class="m7pkg-btn">
+        Unmount this package
+      </button>
+    </footer>
+  </section>
+</div>

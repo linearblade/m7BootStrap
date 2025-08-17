@@ -1,0 +1,96 @@
+/* Package: test:validateInstall — Modal styles */
+:root {
+    --m7pkg-z-overlay: 9998;
+    --m7pkg-z-modal: 9999;
+    --m7pkg-radius: 16px;
+    --m7pkg-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    --m7pkg-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    --m7pkg-bg: #0b1020;
+    --m7pkg-surface: #121834;
+    --m7pkg-text: #e8ebff;
+    --m7pkg-muted: #a8b0d9;
+    --m7pkg-accent: #7aa2ff;
+    --m7pkg-accent-strong: #5d86ff;
+}
+
+/* Utility to keep the whole package hidden until logic opens it */
+.m7pkg-hidden { display: none !important; }
+
+/* Root positions the overlay + modal centered on screen */
+.m7pkg-root {
+    position: fixed;
+    inset: 0;
+    z-index: var(--m7pkg-z-overlay);
+    font-family: var(--m7pkg-font);
+}
+
+/* Dimmed backdrop */
+.m7pkg-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 8, 20, 0.66);
+    backdrop-filter: blur(2px);
+}
+
+/* Modal panel */
+.m7pkg-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.98);
+    width: min(560px, 92vw);
+    background: linear-gradient(180deg, var(--m7pkg-surface), #0e1430 70%);
+    color: var(--m7pkg-text);
+    border-radius: var(--m7pkg-radius);
+    box-shadow: var(--m7pkg-shadow);
+    z-index: var(--m7pkg-z-modal);
+    border: 1px solid rgba(122, 162, 255, 0.18);
+    opacity: 0;
+    pointer-events: none; /* disabled until opened */
+    transition: opacity .18s ease-out, transform .18s ease-out;
+}
+
+/* When logic opens the modal, add .is-open to #m7pkg-modal and unhide root */
+.m7pkg-root .m7pkg-modal.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.m7pkg-header { padding: 20px 24px 8px; }
+.m7pkg-title {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.m7pkg-body { padding: 0 24px 16px; }
+.m7pkg-body p { margin: 0 0 10px; color: var(--m7pkg-text); }
+.m7pkg-meta { color: var(--m7pkg-muted); font-size: 12px; }
+
+.m7pkg-footer {
+    padding: 16px 24px 22px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.m7pkg-btn {
+    appearance: none;
+    border: 0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: var(--m7pkg-accent);
+    color: #0a1028;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(122, 162, 255, 0.35);
+    transition: transform .06s ease, background .12s ease, box-shadow .12s ease;
+}
+.m7pkg-btn:hover { background: var(--m7pkg-accent-strong); box-shadow: 0 6px 18px rgba(122,162,255,.45); }
+.m7pkg-btn:active { transform: translateY(1px); }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .m7pkg-modal { transition: none; }
+    .m7pkg-btn { transition: none; }
+}
