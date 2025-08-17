@@ -3,9 +3,8 @@
 M7BootStrap is a modular runtime package loading and mounting toolkit, designed to work across a wide range of applications.It provides a clean, extensible framework for resolving package dependencies, staging runtime assets and modules, and integrating them into a running system — with an emphasis on composability, clarity, and long-term maintainability.
 
 
-> 🚨 **v1.1 released** — documentation in progress; current docs are _semi-unreliable_.
 
-✅ Version 1 Ready
+✅ Version 1.1 Ready
 
 M7BootStrap is now feature-complete for its 1.0 release, with detailed documentation and stable APIs.
 
@@ -121,7 +120,7 @@ Once your package stack is complete, you can inline it or bundle it into a singl
 
 ⚡ Status
 
-Version 1.0 is production ready. The core lifecycle phases — package schema loading, asset loading, module loading, and mounting — are stable and well-documented.
+Version 1.1 is production ready. The core lifecycle phases — package schema loading, asset loading, module loading, and mounting — are stable and well-documented.
 
 Advanced features like per-scope concurrency limits, granular success/fail handlers, and detailed load reports are included.
 
