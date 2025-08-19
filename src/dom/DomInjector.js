@@ -50,7 +50,7 @@ export default class DomInjector {
     // entry = { content: {body, ...}, meta: {...} }
     elementFromAsset(entry, { container = null } = {}) {
 	const { content, meta } = entry || {};
-	const text = content?.body ?? ''; // HTTP wrapper uses .body
+	let text = content?.body ?? ''; // HTTP wrapper uses .body
 	const type = meta?.type ?? 'text';
 
 	if (type === 'css' || type === 'style') {
@@ -58,7 +58,8 @@ export default class DomInjector {
 	    el.textContent = String(text);
 	    return el;
 	}
-
+	if (type.toLowerCase() === 'html')
+	    text = text.trim();
 	// Default: put raw text/HTML into a container (template by default)
 	const tag = container || (type === 'html' ? 'template' : 'template');
 	const el = document.createElement(tag);
@@ -75,6 +76,7 @@ export default class DomInjector {
 
     // dissolve a wrapper if it only has one child
     static maybeDissolve(el, dissolve = false) {
+	
 	if (!dissolve) return el;
 	const isTemplate = el.tagName?.toLowerCase() === 'template';
 	const host = isTemplate ? el.content : el;
