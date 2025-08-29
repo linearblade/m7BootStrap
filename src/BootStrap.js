@@ -29,7 +29,7 @@ export class BootStrap {
      * @param {Object} options - Boot configuration
      * @param {Object} [options.repo={}] - Initial repo configuration
      */
-    constructor(net, { repo = {} ,load = {}, unload = {}} = {}) {
+    constructor(net, { repo = {} ,load = {}, unload = {},env = {}} = {}) {
         if (!net) {
             throw new Error("BootStrap requires a valid Net instance");
         }
@@ -44,9 +44,21 @@ export class BootStrap {
 	this.runners = new Runners(this);
 	this.defaultLoadOpts   = null;
 	this.defaultUnloadOpts = null;
+	this._env = {};
 	this.setDefaultLoadOpts(load);
 	this.setDefaultUnloadOpts(unload);
+	this.setEnv(env);
     }
+
+    setEnv(env = {}, merge = false) {
+        this._env = merge ? { ...this._env, ...env } : env;
+    }
+
+    getEnv() {
+        return this._env ?? {};
+    }
+
+    
     setDefaultLoadOpts(opts = {},merge=false){
 	if (typeof opts !== 'object'){
 	    opts = {};
@@ -91,7 +103,7 @@ export class BootStrap {
 	    console.error(repoReport.summary() );
 	    return report.noteError("repo loading error").finalize();
 	}
-
+	
 	const limiter = concurrencyLimiter(limit);
 
 	const tasks = plist.map((def, i) =>
@@ -227,7 +239,7 @@ export class BootStrap {
 	if (!handlers) return true;
 	
 	const list = Array.isArray(handlers) ? handlers : [handlers];
-	const env = {};
+	const env = {global:this.getEnv()};
 	for (let i = 0; i < list.length; i++) {
             const rs = this._destructureFunctionResource(list[i]);
 	    //console.warn('destructured:', rs,list[i]);
