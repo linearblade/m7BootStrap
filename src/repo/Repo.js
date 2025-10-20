@@ -3,7 +3,7 @@
  * License: MTL-10 (see LICENSE.md)
  */
 import concurrencyLimiter from '../utils/concurrencyLimiter.js';
-import RepoResolveReport  from '../report/repoResolveReport.js';
+import RepoResolveReport  from '../report/RepoResolveReport.js';
 /**
  * 📦 Repo
  *
