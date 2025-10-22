@@ -133,12 +133,12 @@ export class BootStrap {
 	);
 
 	const allStats = await Promise.all(tasks);
-
+	//stuff the reports in order. yay deterministic now.
 	for (const def of plist) {
 	    const pkgReport = unorderedPKG[def.id];
 	    if (pkgReport) report.addPackageReport(pkgReport);
 	}
-	console.warn(allStats);
+	//console.warn(allStats);
 	//const currentAssets = this.packages.data.getAssets();
 	
 	report.finalize();

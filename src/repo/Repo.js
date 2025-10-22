@@ -137,8 +137,15 @@ export class Repo {
      * fetching package definitions via `repo.resolve()` and normalizing each
      * reference with `repo.normalizePackageResource()` to avoid duplicate work.
      *
+     * DOES:
+     *   - Perform recursive discovery of all referenced packages
+     *   - De-duplicate packages by normalized resource key
+     *   - Preserve input order for root-level packages
+     *   - Produce a partially ordered list (top-level order stable)
+     *
      * It does NOT:
      *   - Install or load the packages
+     *   - Sort dependencies in true topological order (work in progress)
      *   - Sort the packages in dependency order (topological sort)
      *   - Produce an explicit adjacency map of the graph
      *
@@ -260,7 +267,7 @@ export class Repo {
 	//const sorted = this.sortGraph(out, dependencyMap,inputOrderMap);
 	const sorted=  out;
 	//console.log('here');
-	console.warn(sorted);
+	//console.warn(sorted);
 	//console.log(errors);
 	if (errors.length){
             await this.bootstrap._runHandlers(errorHandler, {input,output:sorted,report },`[REPO-ERROR]` );
