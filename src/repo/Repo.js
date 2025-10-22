@@ -167,12 +167,14 @@ export class Repo {
 	const { limit = options?.limit ?? 8, circuitBreaker = 100,load:loadHandler = null, error: errorHandler=null, itemLoad : itemLoadHandler=null, itemError:itemErrorHandler = null } = options?.repo || {};
 	const dependencyMap = {};
 	const inputOrderMap = {};
+	/*
 	//track the order.
 	input.forEach((item, index) => {
 	    const key = item.resource;
-	    inputOrderMap[key] = index;
+	    if(typeof key ==='string')
+		inputOrderMap[key] = index;
 	});
-
+	*/
 	
 	const report = new RepoResolveReport();
 	report.startRun();                // mark start, capture options if you want
@@ -218,9 +220,10 @@ export class Repo {
 		report.noteSkip({ node, reason: 'already_visited' });
                 return;
             }
-
-	    dependencyMap[node.resource] = deps.map(d => d.resource || d);
-	    
+	    /* in progress
+	    if(typeof node.resource =='string')
+	    dependencyMap[node.resource] = node.resource;
+	    */
 	    report.noteVisitStart(node);
 	    
             const normalized =this.normalizePackageResource(node);
@@ -240,6 +243,7 @@ export class Repo {
 	    
             // Run all child visits in parallel…
             const deps = normalize(def.dependencies);
+	    //dependencyMap[node.resource] = deps.map(d => d.resource || d);
 	    report.noteDependencies(def.id, deps);
 
             const limiter = concurrencyLimiter(limit); // e.g., 8 concurrent
@@ -253,9 +257,10 @@ export class Repo {
             await visit(item);
         }
 
-	const sorted = this.sortGraph(out, dependencyMap,inputOrderMap);
-
+	//const sorted = this.sortGraph(out, dependencyMap,inputOrderMap);
+	const sorted=  out;
 	//console.log('here');
+	console.warn(sorted);
 	//console.log(errors);
 	if (errors.length){
             await this.bootstrap._runHandlers(errorHandler, {input,output:sorted,report },`[REPO-ERROR]` );
