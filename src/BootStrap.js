@@ -130,7 +130,7 @@ export class BootStrap {
 	);
 
 	const allStats = await Promise.all(tasks);
-
+	console.warn(allStats);
 	//const currentAssets = this.packages.data.getAssets();
 	
 	report.finalize();
@@ -149,7 +149,7 @@ export class BootStrap {
 		err : errors
 	    },`[BOOTSTRAP-${rtype}]`
 	);
-
+	
 	await this.handlePackageHooks(report, phase, 'Append',options);
 	
 	
