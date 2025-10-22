@@ -97,7 +97,8 @@ export class BootStrap {
 	const errors  = [];
 	const report = new BootStrapLoadReport();
 	const {list:plist, report:repoReport}  = await this.repo.buildDependencyGraph(resources,options);
-	
+	const unorderedPKG = {};
+
 	report.noteRepoReport(repoReport);
 	if(!repoReport.success){
 	    console.error(repoReport.summary() );
@@ -110,7 +111,9 @@ export class BootStrap {
 	    limiter(async () => {
 		try {
 		    const pkgReport = await this._loadPackage(def, options);
-		    report.addPackageReport(pkgReport);
+		    unorderedPKG[def.id] = pkgReport;
+		    //BAD. if you stuff here and they come in out of order, then we lose the order in the load report.
+		    //report.addPackageReport(pkgReport);
 		    if (!pkgReport.success) {
 			errors.push({ def, err: 'check console...' });
 			const errStruct =  { id: def.id, ok: false,def,err:'non throwable error', comment: `package loading error for ${def.id}` };
@@ -130,6 +133,11 @@ export class BootStrap {
 	);
 
 	const allStats = await Promise.all(tasks);
+
+	for (const def of plist) {
+	    const pkgReport = unorderedPKG[def.id];
+	    if (pkgReport) report.addPackageReport(pkgReport);
+	}
 	console.warn(allStats);
 	//const currentAssets = this.packages.data.getAssets();
 	
