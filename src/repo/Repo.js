@@ -165,7 +165,15 @@ export class Repo {
      */
     async buildDependencyGraph(input, options = {}) {
 	const { limit = options?.limit ?? 8, circuitBreaker = 100,load:loadHandler = null, error: errorHandler=null, itemLoad : itemLoadHandler=null, itemError:itemErrorHandler = null } = options?.repo || {};
+	const dependencyMap = {};
+	const inputOrderMap = {};
+	//track the order.
+	input.forEach((item, index) => {
+	    const key = item.resource;
+	    inputOrderMap[key] = index;
+	});
 
+	
 	const report = new RepoResolveReport();
 	report.startRun();                // mark start, capture options if you want
 	report.noteInput(input);   
@@ -210,6 +218,9 @@ export class Repo {
 		report.noteSkip({ node, reason: 'already_visited' });
                 return;
             }
+
+	    dependencyMap[node.resource] = deps.map(d => d.resource || d);
+	    
 	    report.noteVisitStart(node);
 	    
             const normalized =this.normalizePackageResource(node);
@@ -241,22 +252,48 @@ export class Repo {
 	    report.noteEnqueue(item); 
             await visit(item);
         }
+
+	const sorted = this.sortGraph(out, dependencyMap,inputOrderMap);
+
 	//console.log('here');
 	//console.log(errors);
 	if (errors.length){
-            await this.bootstrap._runHandlers(errorHandler, {input,output:out,report },`[REPO-ERROR]` );
+            await this.bootstrap._runHandlers(errorHandler, {input,output:sorted,report },`[REPO-ERROR]` );
 	    //throw new Error(`dependency graph encountered ${errors.length} errors, first: ${errors[0][0]}`); 
 	}else {
-	    await this.bootstrap._runHandlers(loadHandler, {input,output:out,report } ,`[REPO-LOAD]` );
+	    await this.bootstrap._runHandlers(loadHandler, {input,output:sorted,report } ,`[REPO-LOAD]` );
 	}
-	report.finishRun({ total: out.length });
+	report.finishRun({ total: sorted.length });
 	report.finalize();
-	return { list: out, report };
+	return { list: sorted, report };
         //return out; // always an array
     }
 
-    
-    
+    sortGraph(out, dependencyMap = {}, inputOrderMap = {}) {
+	const visited = new Set();
+	const sorted = [];
+
+	function visit(node) {
+	    if (!node || visited.has(node.resource)) return;
+	    visited.add(node.resource);
+
+	    const deps = dependencyMap[node.resource] || [];
+	    deps.forEach(dep => {
+		const depNode = out.find(n => n.resource === dep);
+		if (depNode) visit(depNode);
+	    });
+
+	    sorted.push(node);
+	}
+
+	const roots = [...out].sort((a, b) => {
+	    return (inputOrderMap[a.resource] ?? 0) - (inputOrderMap[b.resource] ?? 0);
+	});
+
+	roots.forEach(visit);
+	return sorted;
+    }
+
     async resolve(input, opts = {}) {
 	const key = this._makeCacheKey(input);
 	if (key && this._resolveCache.has(key)) {
