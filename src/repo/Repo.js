@@ -526,6 +526,18 @@ export class Repo {
      */
 
     _buildPath(repoBase, def, isPath = null) {
+        // If def is already absolute, just return it
+        if (/^https?:\/\//i.test(def)) return def;
+
+        const pathMode = isPath !== null ? isPath : def.endsWith(".json") || def.startsWith(".");
+        const cleanBase = repoBase.replace(/\/+$/, "");
+        const cleanDef = pathMode
+              ? def.replace(/^\/+/, "")
+              : def.replace(/^\/+/, "").replace(":", "/") + ".json";
+
+        return `${cleanBase}/${cleanDef}`;
+    }
+    d_buildPath(repoBase, def, isPath = null) {
 	// Auto-detect if needed
 	const pathMode = isPath !== null ? isPath : def.endsWith(".json") || def.startsWith(".");
 
