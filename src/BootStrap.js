@@ -21,7 +21,7 @@ import BootStrapLoadReport from './report/BootStrapLoadReport.js';
 import PackageLoadReport   from './report/PackageLoadReport.js';
 import Runners             from './runners/Runners.js';
 import deepMerge           from './utils/deepMerge.js';
-import Bundler             from './bundler/Bunder.js';
+import Bundler             from './bundler/Bundler.js';
 
 export class BootStrap {
     /**
