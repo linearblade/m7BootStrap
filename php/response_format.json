@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "compression": "none",
+  "meta": {
+    "count": 1,
+    "base": "/repo/core/general/style/",
+    "url": "/loadBundle.php"
+  },
+  "packages": [
+    {
+      "meta": {
+        "base": "/repo/core/general/style/"
+      },
+      "package": {
+        "url": "repo/core/general/style/package.json",
+        "data": "opaque payload"
+      },
+      "assets": [
+        {
+          "id": "layout",
+          "url": "layout.html",
+          "data": "..."
+        }
+      ],
+      "modules": [
+        {
+          "id": "logic",
+          "url": "logic.js",
+          "data": "..."
+        }
+      ]
+    }
+  ]
+}

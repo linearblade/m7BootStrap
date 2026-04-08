@@ -29,7 +29,7 @@ export class BootStrap {
      * @param {Object} options - Boot configuration
      * @param {Object} [options.repo={}] - Initial repo configuration
      */
-    constructor(net, { repo = {} ,load = {}, unload = {},env = {}} = {}) {
+    constructor(net, { repo = {} ,load = {}, unload = {},env = {}, bundler={}} = {}) {
         if (!net) {
             throw new Error("BootStrap requires a valid Net instance");
         }
@@ -37,6 +37,7 @@ export class BootStrap {
         this.net = net;
 
         this.repo     = new Repo(this, repo);              // Manages package source resolution
+	this.bundler  = new Bundler(this,bundler);
         this.packages = new PackageManager(this);      // Coordinates loading and asset/module registry
 	this.data     = this.packages.data; //alias for now.
         this.dom      = domInstall(this);

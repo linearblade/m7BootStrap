@@ -1,0 +1,303 @@
+/*
+ * Copyright (c) 2025 m7.org
+ * License: MTL-10 (see LICENSE.md)
+ */
+
+export class Bundler {
+    constructor(bootstrap, opts = {}) {
+        if (!bootstrap) {
+            throw new Error("Bundler requires a valid bootstrap instance.");
+        }
+        this.bootstrap = bootstrap;
+        this.net = bootstrap.net;
+        this.opts = opts;
+    }
+
+    async load(url, opts = {}) {
+        const targetUrl = typeof url === 'string' && url.trim()
+            ? url.trim()
+            : typeof opts.url === 'string' && opts.url.trim()
+                ? opts.url.trim()
+                : typeof this.opts?.url === 'string' && this.opts.url.trim()
+                    ? this.opts.url.trim()
+                    : '';
+
+        if (!targetUrl) {
+            throw new Error("Bundler.load() requires a valid url.");
+        }
+
+        const fetchOpts = {
+            ...(this.opts?.fetchOpts || {}),
+            ...(opts?.fetchOpts || {}),
+            format: 'full',
+        };
+        const method = String(opts.method || this.opts.method || 'get').toLowerCase();
+        const postData = opts.postData ?? opts.body ?? this.opts?.postData ?? this.opts?.body ?? null;
+        let resp = null;
+
+        if (method === 'post') {
+            resp = await this.net.http.post(
+                targetUrl,
+                postData,
+                fetchOpts
+            );
+        } else {
+            resp = await this.net.http.get(targetUrl, fetchOpts);
+        }
+
+        if (!resp || !resp.ok) {
+            throw new Error(`Failed to load bundle from ${targetUrl}: ${resp?.status || '??'} ${resp?.statusText || 'Unknown error'}`);
+        }
+
+        return resp.body ?? resp;
+    }
+
+    decode(packageList) {
+        const envelope = this._normalizeEnvelope(packageList);
+        const packages = envelope.packages.map((pkg, index) => this._decodePackage(pkg, index, envelope));
+
+        return {
+            version: envelope.version,
+            compression: envelope.compression,
+            meta: {
+                ...envelope.meta,
+                count: typeof envelope.meta?.count === 'number'
+                    ? envelope.meta.count
+                    : packages.length,
+            },
+            packages,
+        };
+    }
+
+    _unwrapResponse(payload) {
+        if (
+            payload &&
+            typeof payload === 'object' &&
+            !Array.isArray(payload) &&
+            'body' in payload &&
+            !('packages' in payload) &&
+            !('version' in payload)
+        ) {
+            return payload.body;
+        }
+
+        return payload;
+    }
+
+    _normalizeEnvelope(packageList) {
+        let payload = this._unwrapResponse(packageList);
+
+        if (typeof payload === 'string') {
+            const text = payload.trim();
+            if (!text) {
+                throw new Error('Bundler.decode() requires a non-empty bundle payload.');
+            }
+
+            try {
+                payload = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Bundler.decode() received invalid JSON: ${err.message}`);
+            }
+        }
+
+        if (Array.isArray(payload)) {
+            return {
+                version: 1,
+                compression: 'none',
+                meta: {
+                    count: payload.length,
+                },
+                packages: payload,
+            };
+        }
+
+        if (!payload || typeof payload !== 'object') {
+            throw new Error('Bundler.decode() requires a bundle envelope, response body, or package array.');
+        }
+
+        const version = payload.version ?? 1;
+        if (version !== 1) {
+            throw new Error(`Bundler.decode() only supports bundle version 1, received ${version}.`);
+        }
+
+        const compression = payload.compression ?? 'none';
+        if (compression !== 'none') {
+            throw new Error(`Bundler.decode() only supports compression "none", received "${compression}".`);
+        }
+
+        const packages = Array.isArray(payload.packages) ? payload.packages : [];
+        const meta = payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
+            ? { ...payload.meta }
+            : {};
+
+        return {
+            version,
+            compression,
+            meta,
+            packages,
+        };
+    }
+
+    _decodePackage(pkg, index, envelope) {
+        if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) {
+            throw new Error(`Bundler.decode() expected package record ${index} to be an object.`);
+        }
+
+        const recordMeta = pkg.meta && typeof pkg.meta === 'object' && !Array.isArray(pkg.meta)
+            ? { ...pkg.meta }
+            : {};
+        const packageBlock = pkg.package && typeof pkg.package === 'object' && !Array.isArray(pkg.package)
+            ? { ...pkg.package }
+            : {};
+        const manifestValue = packageBlock.data;
+        const manifest = this._parseManifest(manifestValue, `packages[${index}].package.data`);
+
+        const assets = this._mergeEntries(
+            manifest.assets,
+            pkg.assets,
+            `packages[${index}].assets`
+        );
+        const modules = this._mergeEntries(
+            manifest.modules,
+            pkg.modules,
+            `packages[${index}].modules`
+        );
+
+        const base = this._resolveBasePath(recordMeta.base, envelope.meta?.base);
+
+        return {
+            ...manifest,
+            meta: recordMeta,
+            package: {
+                ...packageBlock,
+                data: manifest,
+            },
+            assets,
+            modules,
+            __meta: {
+                ...(manifest.__meta && typeof manifest.__meta === 'object' ? manifest.__meta : {}),
+                base,
+                source: packageBlock.url ?? '',
+                bundle: {
+                    version: envelope.version,
+                    compression: envelope.compression,
+                    meta: envelope.meta,
+                    index,
+                },
+            },
+        };
+    }
+
+    _parseManifest(value, context) {
+        if (typeof value === 'string') {
+            const text = value.trim();
+            if (!text) {
+                throw new Error(`Bundler.decode() found an empty manifest payload at ${context}.`);
+            }
+
+            try {
+                value = JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Bundler.decode() failed to parse manifest at ${context}: ${err.message}`);
+            }
+        }
+
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+            throw new Error(`Bundler.decode() expected a JSON object manifest at ${context}.`);
+        }
+
+        return value;
+    }
+
+    _entryId(entry, context) {
+        if (typeof entry === 'string') {
+            const id = entry.trim();
+            if (!id) {
+                throw new Error(`Bundler.decode() found an empty entry id at ${context}.`);
+            }
+            return id;
+        }
+
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+            throw new Error(`Bundler.decode() expected an object entry at ${context}.`);
+        }
+
+        const id = typeof entry.id === 'string' ? entry.id.trim() : '';
+        if (!id) {
+            throw new Error(`Bundler.decode() expected entry id at ${context}.`);
+        }
+
+        return id;
+    }
+
+    _indexEntries(entries, context) {
+        const map = new Map();
+        if (!Array.isArray(entries)) {
+            return map;
+        }
+
+        for (const entry of entries) {
+            const id = this._entryId(entry, context);
+            map.set(id, entry);
+        }
+
+        return map;
+    }
+
+    _mergeEntries(manifestEntries, bundleEntries, context) {
+        const manifestList = Array.isArray(manifestEntries) ? manifestEntries : [];
+        const bundleList = Array.isArray(bundleEntries) ? bundleEntries : [];
+        const bundleMap = this._indexEntries(bundleList, context);
+        const merged = [];
+        const seen = new Set();
+
+        for (const entry of manifestList) {
+            const id = this._entryId(entry, context);
+            const bundled = bundleMap.get(id);
+            const manifestEntry = typeof entry === 'string'
+                ? { id: entry }
+                : entry;
+
+            if (bundled && typeof bundled === 'object' && !Array.isArray(bundled)) {
+                merged.push({
+                    ...manifestEntry,
+                    ...bundled,
+                    data: bundled.data ?? manifestEntry.data,
+                });
+                seen.add(id);
+                continue;
+            }
+
+            merged.push({
+                ...manifestEntry,
+            });
+            seen.add(id);
+        }
+
+        for (const entry of bundleList) {
+            const id = this._entryId(entry, context);
+            const bundleEntry = typeof entry === 'string'
+                ? { id: entry }
+                : entry;
+            if (seen.has(id)) {
+                continue;
+            }
+
+            merged.push({
+                ...bundleEntry,
+            });
+            seen.add(id);
+        }
+
+        return merged;
+    }
+
+    _resolveBasePath(recordBase, envelopeBase) {
+        const base = [recordBase, envelopeBase]
+            .find(value => typeof value === 'string' && value.trim());
+
+        return typeof base === 'string' ? base.trim() : '';
+    }
+}
+
+export default Bundler;
