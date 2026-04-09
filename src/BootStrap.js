@@ -164,6 +164,7 @@ export class BootStrap {
 	    const downloadEndHr = hrDownloadFinishedAt ?? hrFinishedAt;
 	    const installEndWall = installFinishedAt ?? finishedAt;
 	    const installEndHr = hrInstallFinishedAt ?? hrFinishedAt;
+	    /*
 	    console.info('[BootStrap.loadBundle]', {
 		startedAt,
 		download: {
@@ -180,6 +181,7 @@ export class BootStrap {
 		durationMs: hrFinishedAt - hrStartedAt,
 		report: report ? report.summary() : null
 	    });
+	    */
 	}
     }
     
@@ -301,7 +303,7 @@ export class BootStrap {
 
 	    const handlers = pkg?.hooks?.[key];
 	    if (!handlers) continue;
-	    console.warn('handlers', handlers);
+	    // console.warn('handlers', handlers);
 	    // Executes per package, in declared order
 	    await this.packages.runHooks(pkg, handlers, { pkg, report: pkgReport });
 	    ranAny = true;
