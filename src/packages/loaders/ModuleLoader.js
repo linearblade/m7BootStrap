@@ -69,6 +69,14 @@ export class ModuleLoader {
 	const base = pkg.__meta?.base || bundle?.meta?.base || '';
 	const mods = Array.isArray(bundle?.modules) ? bundle.modules : [];
 	const report = new ModuleLoadReport(pkg.id, { limit, awaitAll });
+	const locationHref = globalThis?.location?.href || 'http://localhost/';
+	const bundleBaseUrl = (() => {
+	    try {
+		return new URL(base || '/', locationHref).href;
+	    } catch {
+		return locationHref;
+	    }
+	})();
 
 	if (this.controller.isLoaded(lid)) {
             console.warn(`Package "${lid}" already loaded.`);
@@ -77,67 +85,191 @@ export class ModuleLoader {
 
 	if (!mods.length) return report.finalize();
 
-	const createTask = (entry) => {
-            const fullID = this.controller.utils.scopedKey(pkgID, entry.id);
-            const sourceText = typeof entry.data === 'string' ? entry.data : '';
-            const meta = {
+	const moduleIndex = new Map();
+	for (const entry of mods) {
+	    if (!entry || typeof entry !== 'object') continue;
+	    const entryId = typeof entry.id === 'string' ? entry.id.trim() : '';
+	    const entryUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
+	    if (!entryId || !entryUrl) continue;
+
+	    try {
+		const originalUrl = new URL(entryUrl, bundleBaseUrl).href;
+		moduleIndex.set(originalUrl, {
+		    ...entry,
+		    id: entryId,
+		    url: entryUrl,
+		    originalUrl,
+		});
+	    } catch {
+		continue;
+	    }
+	}
+
+	const runtimeUrlCache = new Map();
+	const resolving = new Set();
+
+	const isRelativeSpecifier = (specifier) => (
+	    typeof specifier === 'string'
+	    && (specifier.startsWith('./') || specifier.startsWith('../') || specifier.startsWith('/'))
+	);
+
+	const asyncReplace = async (text, pattern, replacer) => {
+	    let out = '';
+	    let lastIndex = 0;
+
+	    for (const match of text.matchAll(pattern)) {
+		const index = match.index ?? 0;
+		const full = match[0];
+		out += text.slice(lastIndex, index);
+		out += await replacer(match);
+		lastIndex = index + full.length;
+	    }
+
+	    out += text.slice(lastIndex);
+	    return out;
+	};
+
+	const resolveRuntimeUrl = async (originalUrl) => {
+	    if (runtimeUrlCache.has(originalUrl)) {
+		return runtimeUrlCache.get(originalUrl);
+	    }
+
+	    if (resolving.has(originalUrl)) {
+		throw new Error(`Circular bundled module dependency detected while resolving ${originalUrl}`);
+	    }
+
+	    const entry = moduleIndex.get(originalUrl);
+	    if (!entry) {
+		throw new Error(`Bundled module dependency not found: ${originalUrl}`);
+	    }
+
+	    resolving.add(originalUrl);
+	    try {
+		const rewriteSpecifier = async (specifier) => {
+		    if (!isRelativeSpecifier(specifier)) {
+			return specifier;
+		    }
+
+		    const targetUrl = new URL(specifier, originalUrl).href;
+		    if (!moduleIndex.has(targetUrl)) {
+			throw new Error(`Bundled module dependency not found: ${specifier} -> ${targetUrl}`);
+		    }
+
+		    return await resolveRuntimeUrl(targetUrl);
+		};
+
+		let source = String(entry.data ?? '');
+		if (!source.trim()) {
+		    throw new Error(`Empty bundled module source for ${entry.originalUrl}`);
+		}
+
+		// Keep the original file URL visible to module code that uses import.meta.url.
+		source = source.replace(/\bimport\.meta\.url\b/g, JSON.stringify(originalUrl));
+
+		source = await asyncReplace(
+		    source,
+		    /(\b(?:import|export)\b[\s\S]*?\bfrom\s*)(['"])([^'"]+)\2/g,
+		    async (match) => {
+			const prefix = match[1];
+			const quote = match[2];
+			const spec = match[3];
+			const resolved = await rewriteSpecifier(spec);
+			return `${prefix}${quote}${resolved}${quote}`;
+		    }
+		);
+
+		source = await asyncReplace(
+		    source,
+		    /(\bimport\s*)(['"])([^'"]+)\2/g,
+		    async (match) => {
+			const prefix = match[1];
+			const quote = match[2];
+			const spec = match[3];
+			const resolved = await rewriteSpecifier(spec);
+			return `${prefix}${quote}${resolved}${quote}`;
+		    }
+		);
+
+		source = await asyncReplace(
+		    source,
+		    /(\bimport\s*\(\s*)(['"])([^'"]+)\2(\s*\))/g,
+		    async (match) => {
+			const prefix = match[1];
+			const quote = match[2];
+			const spec = match[3];
+			const suffix = match[4];
+			const resolved = await rewriteSpecifier(spec);
+			return `${prefix}${quote}${resolved}${quote}${suffix}`;
+		    }
+		);
+
+		const dataUrl = `data:text/javascript;charset=utf-8,${encodeURIComponent(`${source}\n//# sourceURL=${originalUrl}`)}`;
+		runtimeUrlCache.set(originalUrl, dataUrl);
+		return dataUrl;
+	    } finally {
+		resolving.delete(originalUrl);
+	    }
+	};
+
+	const results = [];
+
+	for (const entry of mods) {
+	    if (!entry || typeof entry !== 'object') continue;
+	    const entryId = typeof entry.id === 'string' ? entry.id.trim() : '';
+	    const entryUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
+	    if (!entryId || !entryUrl) continue;
+
+	    const originalUrl = (() => {
+		try {
+		    return new URL(entryUrl, bundleBaseUrl).href;
+		} catch {
+		    return null;
+		}
+	    })();
+	    if (!originalUrl) continue;
+
+	    const fullID = this.controller.utils.scopedKey(pkgID, entryId);
+	    const meta = {
 		...entry,
 		id: fullID,
-		originalID: entry.id,
+		originalID: entryId,
 		packageID: pkgID,
 		base,
 		loaded: false,
 		source: entry
-            };
-
-            this.data.modulesMeta.set(fullID, meta);
-
-	    return async () => {
-		try {
-		    if (!sourceText.trim()) {
-			throw new Error(`Empty bundled module source for ${fullID}`);
-		    }
-
-		    // The bundle already contains the module source, so hydrate it directly.
-		    const source = `${sourceText}\n//# sourceURL=${fullID}`;
-		    const mod = await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(source)}`);
-		    meta.loaded = true;
-		    return { status: 'fulfilled', id: fullID, mod };
-		} catch (err) {
-		    return { status: 'rejected', id: fullID, err };
-		}
 	    };
-	};
 
-	const limiter = concurrencyLimiter(limit);
-	const tasks = mods.map(createTask);
-	const limited = tasks.map(run => limiter(run));
-	const results = await Promise.all(limited);
-	report.setRawResults(results);
+	    this.data.modulesMeta.set(fullID, meta);
 
-	for (const r of results) {
-            const meta = this.data.modulesMeta.get(r.id);
-	    let runner = null;
-	    let rtype = null;
-            if (r.status === 'fulfilled') {
-		this.data.modules.set(r.id, r.mod);
-		if (meta) meta.loaded = true;
-		report.addLoaded(r.id, { meta }, r.mod);
-		runner = itemLoadHandler;
-		rtype = 'LOAD';
-            } else {
-		if (meta) {
-                    meta.loaded = false;
-                    meta.error  = r.err;
- 		}
-		report.addFailed(r.id, r.err, { meta });
-		runner = itemErrorHandler;
-		rtype = 'ERROR';
-		console.warn(`Failed to import bundled module: ${r.id}`, r.err);
-            }
-	    await this.bootstrap._runHandlers(runner, {pkg,report,module:r }, `[MODULE-BUNDLE-ITEM-${rtype} - ${pkg.id} - ${r.id}]`,pkg.id);
+	    try {
+		const runtimeUrl = await resolveRuntimeUrl(originalUrl);
+		const mod = await import(runtimeUrl);
+		meta.loaded = true;
+		this.data.modules.set(fullID, mod);
+		report.addLoaded(fullID, { meta }, mod);
+		results.push({ status: 'fulfilled', id: fullID, mod });
+		await this.bootstrap._runHandlers(
+		    itemLoadHandler,
+		    { pkg, report, module: { status: 'fulfilled', id: fullID, mod } },
+		    `[MODULE-BUNDLE-ITEM-LOAD - ${pkg.id} - ${fullID}]`,
+		    pkg.id
+		);
+	    } catch (err) {
+		meta.loaded = false;
+		meta.error = err;
+		report.addFailed(fullID, err, { meta });
+		results.push({ status: 'rejected', id: fullID, err });
+		console.warn(`Failed to import bundled module: ${fullID}`, err);
+		await this.bootstrap._runHandlers(
+		    itemErrorHandler,
+		    { pkg, report, module: { status: 'rejected', id: fullID, err } },
+		    `[MODULE-BUNDLE-ITEM-ERROR - ${pkg.id} - ${fullID}]`,
+		    pkg.id
+		);
+	    }
 	}
 
+	report.setRawResults(results);
 	report.finalize();
 	const [runner,rtype] = report.success?[loadHandler,'LOAD']:[errorHandler,'ERROR'];
         await this.bootstrap._runHandlers(runner, {pkg, report }, `[MODULE-BUNDLE-${rtype} - ${pkg.id}]`,pkg.id);
