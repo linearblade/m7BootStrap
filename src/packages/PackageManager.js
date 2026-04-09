@@ -43,7 +43,6 @@ export class PackageManager {
     isLoaded(id) {
 	return this.data.package_isLoaded(id);
     }
-    
     /**
      * Loads a package by ID or JSON path.
      * @param {string|object} def - Package ID or direct definition
@@ -97,6 +96,68 @@ export class PackageManager {
 	report.noteHandlersResult(handlerResult);
 	//this.data.package_setLoaded(lid);
 
+	return report.finalize();
+    }
+
+    async loadFromBundle(bundle, options = {}) {
+	const pkg = bundle?.package?.data;
+	const hooks = options?.package?.hooks ?? options?.hooks ?? false;
+
+	if (!pkg || typeof pkg !== 'object') {
+	    throw new Error("loadFromBundle() requires a bundled package object.");
+	}
+
+	const lid = pkg.lid || pkg.id;
+	if (!lid) {
+	    throw new Error("loadFromBundle() requires a package with an 'id' (or 'lid').");
+	}
+
+	const pkgID = pkg.id || lid;
+	pkg.id = pkgID;
+	pkg.lid = pkg.lid || lid;
+
+	const report = new PackageLoadReport().start({ pkg, options, hooks });
+
+	if (this.data.package_isLoaded(lid)) {
+	    console.warn(`Package "${lid}" already loaded.`);
+	    report.noteAssets({ success: true, bundled: true });
+	    report.noteModules({ success: true, bundled: true });
+	    return report.finalize();
+	}
+
+	const base = pkg.__meta?.base || bundle?.meta?.base || '';
+	const assets = Array.isArray(bundle?.assets) ? bundle.assets : [];
+
+	pkg.__meta = {
+	    ...(pkg.__meta ?? {}),
+	    source: pkg.__meta?.source || bundle?.package?.url || '',
+	    base,
+	    hooks
+	};
+
+	for (const asset of assets) {
+	    const fullID = this.utils.scopedKey(pkgID, asset.id);
+	    const meta = {
+		...asset,
+		id: fullID,
+		originalID: asset.id,
+		packageID: pkgID,
+		base,
+		loaded: true,
+		source: asset
+	    };
+	    this.data.assetsMeta.set(fullID, meta);
+	    this.data.assets.set(fullID, asset.data ?? asset.content ?? null);
+	}
+
+	const moduleReport = await this.modules.loadFromBundle(bundle, options);
+
+	this.data.packages.set(lid, pkg);
+
+	this.data.package_setLoaded(lid);
+
+	report.noteAssets({ success: true, bundled: true, count: assets.length });
+	report.noteModules(moduleReport);
 	return report.finalize();
     }
 

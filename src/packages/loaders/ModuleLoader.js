@@ -50,6 +50,101 @@ export class ModuleLoader {
 
     }
 
+    async loadFromBundle(bundle, options = {}) {
+	const pkg = bundle?.package?.data;
+	if (!pkg || typeof pkg !== 'object') {
+            throw new Error("loadFromBundle() requires a bundled package object.");
+	}
+
+	const lid = pkg.lid || pkg.id;
+	if (!lid) {
+	    throw new Error("loadFromBundle() requires a package with an 'id' (or 'lid').");
+	}
+
+	const pkgID = pkg.id || lid;
+	pkg.id = pkgID;
+	pkg.lid = pkg.lid || lid;
+
+	const {   limit = options?.limit ?? 8,   awaitAll = true,load:loadHandler,error:errorHandler,itemLoad:itemLoadHandler = null,itemError:itemErrorHandler = null } = options?.module || {};
+	const base = pkg.__meta?.base || bundle?.meta?.base || '';
+	const mods = Array.isArray(bundle?.modules) ? bundle.modules : [];
+	const report = new ModuleLoadReport(pkg.id, { limit, awaitAll });
+
+	if (this.controller.isLoaded(lid)) {
+            console.warn(`Package "${lid}" already loaded.`);
+            return report.finalize();
+	}
+
+	if (!mods.length) return report.finalize();
+
+	const createTask = (entry) => {
+            const fullID = this.controller.utils.scopedKey(pkgID, entry.id);
+            const sourceText = typeof entry.data === 'string' ? entry.data : '';
+            const meta = {
+		...entry,
+		id: fullID,
+		originalID: entry.id,
+		packageID: pkgID,
+		base,
+		loaded: false,
+		source: entry
+            };
+
+            this.data.modulesMeta.set(fullID, meta);
+
+	    return async () => {
+		try {
+		    if (!sourceText.trim()) {
+			throw new Error(`Empty bundled module source for ${fullID}`);
+		    }
+
+		    // The bundle already contains the module source, so hydrate it directly.
+		    const source = `${sourceText}\n//# sourceURL=${fullID}`;
+		    const mod = await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(source)}`);
+		    meta.loaded = true;
+		    return { status: 'fulfilled', id: fullID, mod };
+		} catch (err) {
+		    return { status: 'rejected', id: fullID, err };
+		}
+	    };
+	};
+
+	const limiter = concurrencyLimiter(limit);
+	const tasks = mods.map(createTask);
+	const limited = tasks.map(run => limiter(run));
+	const results = await Promise.all(limited);
+	report.setRawResults(results);
+
+	for (const r of results) {
+            const meta = this.data.modulesMeta.get(r.id);
+	    let runner = null;
+	    let rtype = null;
+            if (r.status === 'fulfilled') {
+		this.data.modules.set(r.id, r.mod);
+		if (meta) meta.loaded = true;
+		report.addLoaded(r.id, { meta }, r.mod);
+		runner = itemLoadHandler;
+		rtype = 'LOAD';
+            } else {
+		if (meta) {
+                    meta.loaded = false;
+                    meta.error  = r.err;
+ 		}
+		report.addFailed(r.id, r.err, { meta });
+		runner = itemErrorHandler;
+		rtype = 'ERROR';
+		console.warn(`Failed to import bundled module: ${r.id}`, r.err);
+            }
+	    await this.bootstrap._runHandlers(runner, {pkg,report,module:r }, `[MODULE-BUNDLE-ITEM-${rtype} - ${pkg.id} - ${r.id}]`,pkg.id);
+	}
+
+	report.finalize();
+	const [runner,rtype] = report.success?[loadHandler,'LOAD']:[errorHandler,'ERROR'];
+        await this.bootstrap._runHandlers(runner, {pkg, report }, `[MODULE-BUNDLE-${rtype} - ${pkg.id}]`,pkg.id);
+	
+	return report;
+    }
+
 
 
     async _loadModules(pkg,options = {}) {

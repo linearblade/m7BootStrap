@@ -241,7 +241,23 @@ export class BootStrap {
     }
 
     async _loadBundledPackage(bundle, options = {}) {
-	return await this._loadPackage(bundle.package.data, options);
+	const def = bundle?.package?.data;
+
+	if (!def) {
+            console.warn("[BootStrap] no package supplied:", bundle);
+            return { success:false };
+        }
+
+        if (this.packages.isLoaded(def.id)) {
+            console.warn(`isLoaded: Package "${def.id}" already loaded.`);
+            return {success:true};
+        }
+
+        const packageReport = await this.packages.loadFromBundle(bundle, options);
+        if (!packageReport.success) {
+            console.warn("[BootStrap] Failed to load package:", def.id || '[unknown]');
+        }
+        return packageReport;
     }
 
     
