@@ -13,37 +13,50 @@ export class Bundler {
         this.opts = opts;
     }
 
-    async load(url, opts = {}) {
-        const targetUrl = typeof url === 'string' && url.trim()
-            ? url.trim()
-            : typeof opts.url === 'string' && opts.url.trim()
-                ? opts.url.trim()
-                : typeof this.opts?.url === 'string' && this.opts.url.trim()
-                    ? this.opts.url.trim()
-                    : '';
+    async load(url, packageList, opts = {}) {
+        const targetUrl = typeof url === 'string' && url.trim() ? url.trim() : '';
 
         if (!targetUrl) {
             throw new Error("Bundler.load() requires a valid url.");
         }
 
+        const isHash = value => (
+            value !== null &&
+            typeof value === 'object' &&
+            !Array.isArray(value)
+        );
+
+        if (!isHash(opts)) {
+            opts = { version: opts };
+        }
+
+        const packages = Array.isArray(packageList)
+            ? packageList
+            : packageList == null
+                ? []
+                : [packageList];
+
+        const {
+            fetchOpts: optFetchOpts = {},
+            body: _body,
+            method: _method,
+            postData: _postData,
+            url: _url,
+            ...requestOpts
+        } = opts;
+
+        const payload = {
+            ...requestOpts,
+            version: requestOpts.version ?? this.opts?.version ?? 1,
+            packages,
+        };
+
         const fetchOpts = {
             ...(this.opts?.fetchOpts || {}),
-            ...(opts?.fetchOpts || {}),
+            ...(optFetchOpts || {}),
             format: 'full',
         };
-        const method = String(opts.method || this.opts.method || 'get').toLowerCase();
-        const postData = opts.postData ?? opts.body ?? this.opts?.postData ?? this.opts?.body ?? null;
-        let resp = null;
-
-        if (method === 'post') {
-            resp = await this.net.http.post(
-                targetUrl,
-                postData,
-                fetchOpts
-            );
-        } else {
-            resp = await this.net.http.get(targetUrl, fetchOpts);
-        }
+        const resp = await this.net.http.post(targetUrl, payload, fetchOpts);
 
         if (!resp || !resp.ok) {
             throw new Error(`Failed to load bundle from ${targetUrl}: ${resp?.status || '??'} ${resp?.statusText || 'Unknown error'}`);
