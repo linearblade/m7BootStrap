@@ -139,6 +139,20 @@ export class PackageManager {
 
 	for (const asset of assets) {
 	    const fullID = this.utils.scopedKey(pkgID, asset.id);
+	    let content = asset.content ?? asset.data ?? null;
+
+	    if (!content || typeof content !== 'object' || !('body' in content)) {
+		if (asset.type === 'mount' && typeof content === 'string') {
+		    try {
+			content = { body: JSON.parse(content) };
+		    } catch {
+			content = { body: content };
+		    }
+		} else {
+		    content = { body: content };
+		}
+	    }
+
 	    const meta = {
 		...asset,
 		id: fullID,
@@ -149,7 +163,7 @@ export class PackageManager {
 		source: asset
 	    };
 	    this.data.assetsMeta.set(fullID, meta);
-	    this.data.assets.set(fullID, asset.data ?? asset.content ?? null);
+	    this.data.assets.set(fullID, content);
 	}
 
 	const moduleReport = await this.modules.loadFromBundle(bundle, options);

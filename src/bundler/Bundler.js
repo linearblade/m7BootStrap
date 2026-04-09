@@ -116,16 +116,16 @@ export class Bundler {
             },
         };
 
-        const assets = Array.isArray(pkg.assets)
-            ? pkg.assets
-            : Array.isArray(enrichedManifest.assets)
-                ? enrichedManifest.assets
-                : [];
-        const modules = Array.isArray(pkg.modules)
-            ? pkg.modules
-            : Array.isArray(enrichedManifest.modules)
-                ? enrichedManifest.modules
-                : [];
+        const assets = this._mergeEntries(
+            enrichedManifest.assets,
+            pkg.assets,
+            `packages[${index}].assets`
+        );
+        const modules = this._mergeEntries(
+            enrichedManifest.modules,
+            pkg.modules,
+            `packages[${index}].modules`
+        );
 
         return {
             ...enrichedManifest,
