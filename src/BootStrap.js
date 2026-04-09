@@ -77,9 +77,15 @@ export class BootStrap {
     }
 
 
-    async loadBundle(url, packageList, opts){
-	const resp =await this.bundler.load(url,packageList,opts);
-	
+    async loadBundle(url, packageList, opts = {}) {
+	const resp = await this.bundler.load(url, packageList, opts);
+	const results = [];
+
+	for (const bundle of resp.packages || []) {
+	    results.push(await this._loadBundledPackage(bundle, opts));
+	}
+
+	return results;
     }
     
     /**
@@ -232,6 +238,10 @@ export class BootStrap {
             console.warn("[BootStrap] Failed to load package:", def.id || '[unknown]');
 	}
 	return packageReport;
+    }
+
+    async _loadBundledPackage(bundle, options = {}) {
+	return await this._loadPackage(bundle.package.data, options);
     }
 
     
