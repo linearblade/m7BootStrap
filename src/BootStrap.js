@@ -78,12 +78,36 @@ export class BootStrap {
 
 
     async loadBundle(url, packageList, opts = {}) {
-	const startedAt = Date.now();
+	const wallNow = () => Date.now();
+	const hrNow = () => (
+	    typeof performance !== 'undefined'
+	    && typeof performance.now === 'function'
+	        ? performance.now()
+	        : Date.now()
+	);
+
+	const startedAt = wallNow();
+	const hrStartedAt = hrNow();
 	let report = null;
+	let downloadStartedAt = startedAt;
+	let hrDownloadStartedAt = hrStartedAt;
+	let downloadFinishedAt = null;
+	let hrDownloadFinishedAt = null;
+	let installStartedAt = null;
+	let hrInstallStartedAt = null;
+	let installFinishedAt = null;
+	let hrInstallFinishedAt = null;
 
 	try {
 	    opts = deepMerge(this.defaultLoadOpts, opts || {});
+	    downloadStartedAt = wallNow();
+	    hrDownloadStartedAt = hrNow();
 	    const resp = await this.bundler.load(url, packageList, opts);
+	    downloadFinishedAt = wallNow();
+	    hrDownloadFinishedAt = hrNow();
+
+	    installStartedAt = wallNow();
+	    hrInstallStartedAt = hrNow();
 	    const onLoad = opts?.load ?? null;
 	    const onFail = opts?.error ?? null;
 	    report = new BootStrapLoadReport().start({
@@ -127,16 +151,33 @@ export class BootStrap {
 	    );
 	    await this.handlePackageHooks(report, phase, 'Append', opts);
 
+	    installFinishedAt = wallNow();
+	    hrInstallFinishedAt = hrNow();
 	    return report.packages;
 	} finally {
-	    const finishedAt = Date.now();
+	    const finishedAt = wallNow();
+	    const hrFinishedAt = hrNow();
 	    if (report) {
 		report.finalize();
 	    }
+	    const downloadEndWall = downloadFinishedAt ?? finishedAt;
+	    const downloadEndHr = hrDownloadFinishedAt ?? hrFinishedAt;
+	    const installEndWall = installFinishedAt ?? finishedAt;
+	    const installEndHr = hrInstallFinishedAt ?? hrFinishedAt;
 	    console.info('[BootStrap.loadBundle]', {
 		startedAt,
+		download: {
+		    startedAt: downloadStartedAt,
+		    finishedAt: downloadEndWall,
+		    durationMs: downloadEndHr - hrDownloadStartedAt,
+		},
+		install: {
+		    startedAt: installStartedAt ?? downloadEndWall,
+		    finishedAt: installEndWall,
+		    durationMs: hrInstallStartedAt != null ? (installEndHr - hrInstallStartedAt) : null,
+		},
 		finishedAt,
-		durationMs: finishedAt - startedAt,
+		durationMs: hrFinishedAt - hrStartedAt,
 		report: report ? report.summary() : null
 	    });
 	}
