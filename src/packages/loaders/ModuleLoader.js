@@ -152,7 +152,9 @@ export class ModuleLoader {
 
 		    const targetUrl = new URL(specifier, originalUrl).href;
 		    if (!moduleIndex.has(targetUrl)) {
-			throw new Error(`Bundled module dependency not found: ${specifier} -> ${targetUrl}`);
+			// Preserve normal relative-import behavior for modules that were not
+			// included in the bundle. This falls back to the original file URL.
+			return targetUrl;
 		    }
 
 		    return await resolveRuntimeUrl(targetUrl);
