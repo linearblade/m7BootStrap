@@ -76,6 +76,12 @@ export class BootStrap {
 	this.defaultUnloadOpts = merge?deepMerge(this.defaultUnloadOpts,opts):deepMerge({},opts);
     }
 
+
+    async loadBundle(url, packageList, opts){
+	const resp =await this.bundler.load(url,packageList,opts);
+	
+    }
+    
     /**
      * Load and resolve one or more package resources (e.g. scene, mount, engine).
      *

@@ -13,11 +13,11 @@ export class Bundler {
         this.opts = opts;
     }
 
-    async load(url, packageList, opts = {}) {
+    async request(url, packageList, opts = {}) {
         const targetUrl = typeof url === 'string' && url.trim() ? url.trim() : '';
 
         if (!targetUrl) {
-            throw new Error("Bundler.load() requires a valid url.");
+            throw new Error("Bundler.request() requires a valid url.");
         }
 
         const isHash = value => (
@@ -65,9 +65,15 @@ export class Bundler {
         return resp.body ?? resp;
     }
 
+    // Orchestrates the bundle fetch + decode path.
+    async load(url, packageList, opts = {}) {
+        const requestResult = await this.request(url, packageList, opts);
+        return this.decode(requestResult);
+    }
+
     decode(packageList) {
         const envelope = this._normalizeEnvelope(packageList);
-        const packages = envelope.packages.map((pkg, index) => this._decodePackage(pkg, index, envelope));
+        const packages = envelope.packages.map((pkg, index) => this._decodeBundlePackage(pkg, index, envelope));
 
         return {
             version: envelope.version,
@@ -79,6 +85,57 @@ export class Bundler {
                     : packages.length,
             },
             packages,
+        };
+    }
+
+    _decodeBundlePackage(pkg, index, envelope) {
+        if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) {
+            throw new Error(`Bundler.decode() expected package record ${index} to be an object.`);
+        }
+
+        const recordMeta = pkg.meta && typeof pkg.meta === 'object' && !Array.isArray(pkg.meta)
+            ? { ...pkg.meta }
+            : {};
+        const packageBlock = pkg.package && typeof pkg.package === 'object' && !Array.isArray(pkg.package)
+            ? { ...pkg.package }
+            : {};
+        const manifest = this._parseManifest(packageBlock.data, `packages[${index}].package.data`);
+        const source = typeof packageBlock.url === 'string' ? packageBlock.url.trim() : '';
+        const base = this._resolveBasePath(recordMeta.base, source, envelope.meta?.base);
+        const enrichedManifest = {
+            ...manifest,
+            ...(typeof manifest.lid === 'string' || typeof manifest.lid === 'number'
+                ? { lid: manifest.lid }
+                : manifest.id != null
+                    ? { lid: manifest.id }
+                    : {}),
+            __meta: {
+                ...(manifest.__meta && typeof manifest.__meta === 'object' ? manifest.__meta : {}),
+                source,
+                base,
+            },
+        };
+
+        const assets = Array.isArray(pkg.assets)
+            ? pkg.assets
+            : Array.isArray(enrichedManifest.assets)
+                ? enrichedManifest.assets
+                : [];
+        const modules = Array.isArray(pkg.modules)
+            ? pkg.modules
+            : Array.isArray(enrichedManifest.modules)
+                ? enrichedManifest.modules
+                : [];
+
+        return {
+            ...enrichedManifest,
+            meta: recordMeta,
+            package: {
+                ...packageBlock,
+                data: enrichedManifest,
+            },
+            assets,
+            modules,
         };
     }
 
@@ -151,6 +208,23 @@ export class Bundler {
         };
     }
 
+    _decoder_old(packageList) {
+        const envelope = this._normalizeEnvelope(packageList);
+        const packages = envelope.packages.map((pkg, index) => this._decodePackage(pkg, index, envelope));
+
+        return {
+            version: envelope.version,
+            compression: envelope.compression,
+            meta: {
+                ...envelope.meta,
+                count: typeof envelope.meta?.count === 'number'
+                    ? envelope.meta.count
+                    : packages.length,
+            },
+            packages,
+        };
+    }
+
     _decodePackage(pkg, index, envelope) {
         if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) {
             throw new Error(`Bundler.decode() expected package record ${index} to be an object.`);
@@ -176,7 +250,7 @@ export class Bundler {
             `packages[${index}].modules`
         );
 
-        const base = this._resolveBasePath(recordMeta.base, envelope.meta?.base);
+        const base = this._resolveBasePath(recordMeta.base, packageBlock.url ?? '', envelope.meta?.base);
 
         return {
             ...manifest,
@@ -305,11 +379,19 @@ export class Bundler {
         return merged;
     }
 
-    _resolveBasePath(recordBase, envelopeBase) {
+    _resolveBasePath(recordBase, sourceUrl, envelopeBase) {
         const base = [recordBase, envelopeBase]
             .find(value => typeof value === 'string' && value.trim());
 
-        return typeof base === 'string' ? base.trim() : '';
+        if (typeof base === 'string' && base.trim()) {
+            return base.trim();
+        }
+
+        if (typeof sourceUrl === 'string' && sourceUrl.trim()) {
+            return sourceUrl.trim().replace(/[^/]+$/, '');
+        }
+
+        return '';
     }
 }
 
