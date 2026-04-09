@@ -102,6 +102,8 @@ export class PackageManager {
     async loadFromBundle(bundle, options = {}) {
 	const pkg = bundle?.package?.data;
 	const hooks = options?.package?.hooks ?? options?.hooks ?? false;
+	const loadHandler = options?.package?.load;
+	const errorHandler = options?.package?.error;
 
 	if (!pkg || typeof pkg !== 'object') {
 	    throw new Error("loadFromBundle() requires a bundled package object.");
@@ -158,6 +160,21 @@ export class PackageManager {
 
 	report.noteAssets({ success: true, bundled: true, count: assets.length });
 	report.noteModules(moduleReport);
+
+	if (hooks) {
+	    const key = moduleReport.success ? 'Load' : 'Error';
+	    const hookSuccess = await this._runHooksFromPackage(pkg, `package${key}`, { pkg, report });
+	    report.noteHooksResult(hookSuccess);
+	}
+
+	const [runner, rtype] = moduleReport.success
+	    ? [loadHandler, 'LOAD']
+	    : [errorHandler, 'ERROR'];
+	report.noteRunner(runner);
+
+	const handlerResult = await this.bootstrap._runHandlers(runner, { pkg, report }, `[PACKAGE-${rtype} - ${pkg.id}]`, pkg.id);
+	report.noteHandlersResult(handlerResult);
+
 	return report.finalize();
     }
 
