@@ -11,7 +11,8 @@ import Net from "../../../m7Fetch/src/index.js";
 
 export function createBootStrap(netOpts = {}, bootstrapOpts = {}) {
     const runtimeNet = new Net(netOpts);
-    return new BootStrap(runtimeNet, bootstrapOpts);
+    const bootstrap = new BootStrap(runtimeNet, bootstrapOpts);
+    return { net: runtimeNet, bootstrap };
 }
 
 export {
