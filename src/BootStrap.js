@@ -78,52 +78,68 @@ export class BootStrap {
 
 
     async loadBundle(url, packageList, opts = {}) {
-	opts = deepMerge(this.defaultLoadOpts, opts || {});
-	const resp = await this.bundler.load(url, packageList, opts);
-	const onLoad = opts?.load ?? null;
-	const onFail = opts?.error ?? null;
-	const report = new BootStrapLoadReport().start({
-	    pkgInstructions: packageList,
-	    mountInstructions: url,
-	    options: opts
-	});
-	const errors = [];
+	const startedAt = Date.now();
+	let report = null;
 
-	for (const bundle of resp.packages || []) {
-	    const pkgReport = await this._loadBundledPackage(bundle, opts);
-	    report.addPackageReport(pkgReport);
-	    if (!pkgReport?.success) {
-		errors.push({
-		    id: pkgReport?.pkgId ?? pkgReport?.lid ?? null,
-		    ok: false,
-		    report: pkgReport
-		});
-		report.noteError({
-		    id: pkgReport?.pkgId ?? pkgReport?.lid ?? null,
-		    ok: false,
-		    comment: `package loading error for ${pkgReport?.pkgId ?? pkgReport?.lid ?? '[unknown]'}`
-		});
+	try {
+	    opts = deepMerge(this.defaultLoadOpts, opts || {});
+	    const resp = await this.bundler.load(url, packageList, opts);
+	    const onLoad = opts?.load ?? null;
+	    const onFail = opts?.error ?? null;
+	    report = new BootStrapLoadReport().start({
+		pkgInstructions: packageList,
+		mountInstructions: url,
+		options: opts
+	    });
+	    const errors = [];
+
+	    for (const bundle of resp.packages || []) {
+		const pkgReport = await this._loadBundledPackage(bundle, opts);
+		report.addPackageReport(pkgReport);
+		if (!pkgReport?.success) {
+		    errors.push({
+			id: pkgReport?.pkgId ?? pkgReport?.lid ?? null,
+			ok: false,
+			report: pkgReport
+		    });
+		    report.noteError({
+			id: pkgReport?.pkgId ?? pkgReport?.lid ?? null,
+			ok: false,
+			comment: `package loading error for ${pkgReport?.pkgId ?? pkgReport?.lid ?? '[unknown]'}`
+		    });
+		}
 	    }
+
+	    report.finalize();
+	    const [runner, rtype, phase] = report.success
+		? [onLoad, 'LOAD', 'load']
+		: [onFail, 'ERROR', 'error'];
+
+	    await this.handlePackageHooks(report, phase, 'Prepend', opts);
+	    await this._runHandlers(
+		runner,
+		{
+		    report,
+		    options: opts,
+		    err: errors
+		},
+		`[BOOTSTRAP-${rtype}]`
+	    );
+	    await this.handlePackageHooks(report, phase, 'Append', opts);
+
+	    return report.packages;
+	} finally {
+	    const finishedAt = Date.now();
+	    if (report) {
+		report.finalize();
+	    }
+	    console.info('[BootStrap.loadBundle]', {
+		startedAt,
+		finishedAt,
+		durationMs: finishedAt - startedAt,
+		report: report ? report.summary() : null
+	    });
 	}
-
-	report.finalize();
-	const [runner, rtype, phase] = report.success
-	    ? [onLoad, 'LOAD', 'load']
-	    : [onFail, 'ERROR', 'error'];
-
-	await this.handlePackageHooks(report, phase, 'Prepend', opts);
-	await this._runHandlers(
-	    runner,
-	    {
-		report,
-		options: opts,
-		err: errors
-	    },
-	    `[BOOTSTRAP-${rtype}]`
-	);
-	await this.handlePackageHooks(report, phase, 'Append', opts);
-
-	return report.packages;
     }
     
     /**
