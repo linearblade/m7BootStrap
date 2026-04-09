@@ -7,14 +7,17 @@ import BootStrap from "../BootStrap.js";
 import Bundler from "../bundler/Bundler.js";
 import defaultLoadOpts from "../defaults/defaultLoadOpts.js";
 import defaultUnloadOpts from "../defaults/defaultUnloadOpts.js";
+import Net from "../../../m7Fetch/src/index.js";
 
-export function createBootStrap(net, opts = {}) {
-    return new BootStrap(net, opts);
+export function createBootStrap(net = null, opts = {}) {
+    const runtimeNet = net || new Net();
+    return new BootStrap(runtimeNet, opts);
 }
 
 export {
     BootStrap,
     Bundler,
+    Net,
     defaultLoadOpts,
     defaultUnloadOpts,
 };
@@ -22,6 +25,7 @@ export {
 export default {
     BootStrap,
     Bundler,
+    Net,
     createBootStrap,
     defaultLoadOpts,
     defaultUnloadOpts,
