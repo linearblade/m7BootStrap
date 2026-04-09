@@ -68,35 +68,47 @@ export class PackageManager {
             return;
 	}
 
-	const assetReport = await this.assets.load(pkg,options);
-	
-	const moduleReport   = await this.modules.load(pkg,options);
-	report.noteModules(moduleReport).noteAssets(assetReport);
-	
-	// Cache the definition
-	pkg.__meta = {...(pkg?.__meta??{}), hooks };
-	this.data.packages.set(lid, pkg);
+		const assetReport = await this.assets.load(pkg,options);
+		
+		const moduleReport   = await this.modules.load(pkg,options);
+		/*
+		report.noteModules(moduleReport).noteAssets(assetReport);
 
-	if (hooks) {
-	    const key = moduleReport.success && assetReport.success?'Load':'Error';
-	    //console.warn("have hooks,",key);
-	    const hookSuccess = await this._runHooksFromPackage(pkg,`package${key}`,{pkg,report});
-	    report.noteHooksResult(hookSuccess);
-	}
+		// Cache the definition
+		pkg.__meta = {...(pkg?.__meta??{}), hooks };
+		this.data.packages.set(lid, pkg);
+
+		if (hooks) {
+		    const key = moduleReport.success && assetReport.success?'Load':'Error';
+		    //console.warn("have hooks,",key);
+		    const hookSuccess = await this._runHooksFromPackage(pkg,`package${key}`,{pkg,report});
+		    report.noteHooksResult(hookSuccess);
+		}
 
 
-	const [runner,rtype] = moduleReport.success && assetReport.success
-	      ? [loadHandler,'LOAD']
-	      : [errorHandler,'ERROR'];
-	report.noteRunner(runner);
+		const [runner,rtype] = moduleReport.success && assetReport.success
+		      ? [loadHandler,'LOAD']
+		      : [errorHandler,'ERROR'];
+		report.noteRunner(runner);
 
-	
-	
-        const handlerResult = await this.bootstrap._runHandlers(runner, {pkg,report}, `[PACKAGE-${rtype} - ${pkg.id}]`,pkg.id);
-	report.noteHandlersResult(handlerResult);
-	//this.data.package_setLoaded(lid);
 
-	return report.finalize();
+
+	        const handlerResult = await this.bootstrap._runHandlers(runner, {pkg,report}, `[PACKAGE-${rtype} - ${pkg.id}]`,pkg.id);
+		report.noteHandlersResult(handlerResult);
+		//this.data.package_setLoaded(lid);
+
+		return report.finalize();
+		*/
+		return await this._finalizePackageLoad({
+		    pkg,
+		    report,
+		    assetReport,
+		    moduleReport,
+		    options,
+		    hooks,
+		    loadHandler,
+		    errorHandler
+		});
     }
 
     async loadFromBundle(bundle, options = {}) {
@@ -130,12 +142,12 @@ export class PackageManager {
 	const base = pkg.__meta?.base || bundle?.meta?.base || '';
 	const assets = Array.isArray(bundle?.assets) ? bundle.assets : [];
 
-	pkg.__meta = {
-	    ...(pkg.__meta ?? {}),
-	    source: pkg.__meta?.source || bundle?.package?.url || '',
-	    base,
-	    hooks
-	};
+		pkg.__meta = {
+		    ...(pkg.__meta ?? {}),
+		    source: pkg.__meta?.source || bundle?.package?.url || '',
+		    base,
+		    hooks
+		};
 
 	for (const asset of assets) {
 	    const fullID = this.utils.scopedKey(pkgID, asset.id);
@@ -162,33 +174,79 @@ export class PackageManager {
 		loaded: true,
 		source: asset
 	    };
-	    this.data.assetsMeta.set(fullID, meta);
-	    this.data.assets.set(fullID, content);
+		    this.data.assetsMeta.set(fullID, meta);
+		    this.data.assets.set(fullID, content);
+		}
+
+		const moduleReport = await this.modules.loadFromBundle(bundle, options);
+
+		/*
+		this.data.packages.set(lid, pkg);
+
+		this.data.package_setLoaded(lid);
+
+		report.noteAssets({ success: true, bundled: true, count: assets.length });
+		report.noteModules(moduleReport);
+
+		if (hooks) {
+		    const key = moduleReport.success ? 'Load' : 'Error';
+		    const hookSuccess = await this._runHooksFromPackage(pkg, `package${key}`, { pkg, report });
+		    report.noteHooksResult(hookSuccess);
+		}
+
+		const [runner, rtype] = moduleReport.success
+		    ? [loadHandler, 'LOAD']
+		    : [errorHandler, 'ERROR'];
+		report.noteRunner(runner);
+
+		const handlerResult = await this.bootstrap._runHandlers(runner, { pkg, report }, `[PACKAGE-${rtype} - ${pkg.id}]`, pkg.id);
+		report.noteHandlersResult(handlerResult);
+
+		return report.finalize();
+		*/
+
+		const assetReport = { success: true, bundled: true, count: assets.length };
+		return await this._finalizePackageLoad({
+		    pkg,
+		    report,
+		    assetReport,
+		    moduleReport,
+		    options,
+		    hooks,
+		    loadHandler,
+		    errorHandler
+		});
+    }
+
+    async _finalizePackageLoad({ pkg, report, assetReport, moduleReport, options = {}, hooks = false, loadHandler = null, errorHandler = null } = {}) {
+	if (!pkg || !report) {
+	    throw new Error("_finalizePackageLoad() requires pkg and report.");
 	}
 
-	const moduleReport = await this.modules.loadFromBundle(bundle, options);
+	report.noteModules(moduleReport).noteAssets(assetReport);
 
-	this.data.packages.set(lid, pkg);
-
-	this.data.package_setLoaded(lid);
-
-	report.noteAssets({ success: true, bundled: true, count: assets.length });
-	report.noteModules(moduleReport);
+	pkg.__meta = { ...(pkg?.__meta ?? {}), hooks };
+	this.data.packages.set(pkg.lid || pkg.id, pkg);
+	this.data.package_setLoaded(pkg.lid || pkg.id);
 
 	if (hooks) {
-	    const key = moduleReport.success ? 'Load' : 'Error';
+	    const key = moduleReport?.success && assetReport?.success ? 'Load' : 'Error';
 	    const hookSuccess = await this._runHooksFromPackage(pkg, `package${key}`, { pkg, report });
 	    report.noteHooksResult(hookSuccess);
 	}
 
-	const [runner, rtype] = moduleReport.success
+	const [runner, rtype] = moduleReport?.success && assetReport?.success
 	    ? [loadHandler, 'LOAD']
 	    : [errorHandler, 'ERROR'];
 	report.noteRunner(runner);
 
-	const handlerResult = await this.bootstrap._runHandlers(runner, { pkg, report }, `[PACKAGE-${rtype} - ${pkg.id}]`, pkg.id);
+	const handlerResult = await this.bootstrap._runHandlers(
+	    runner,
+	    { pkg, report },
+	    `[PACKAGE-${rtype} - ${pkg.id}]`,
+	    pkg.id
+	);
 	report.noteHandlersResult(handlerResult);
-
 	return report.finalize();
     }
 
