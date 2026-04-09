@@ -9,9 +9,9 @@ import defaultLoadOpts from "../defaults/defaultLoadOpts.js";
 import defaultUnloadOpts from "../defaults/defaultUnloadOpts.js";
 import Net from "../../../m7Fetch/src/index.js";
 
-export function createBootStrap(net = null, opts = {}) {
-    const runtimeNet = net || new Net();
-    return new BootStrap(runtimeNet, opts);
+export function createBootStrap(netOpts = {}, bootstrapOpts = {}) {
+    const runtimeNet = new Net(netOpts);
+    return new BootStrap(runtimeNet, bootstrapOpts);
 }
 
 export {
