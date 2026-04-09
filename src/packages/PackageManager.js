@@ -245,10 +245,21 @@ export class PackageManager {
 	if (!mod) return undefined;
 	if (!fnPath) {
             // Module itself is callable (e.g., @foo where modules.get("foo") is a function)
-            return typeof mod === 'function' ? (bind ? mod.bind(mod) : mod) : undefined;
+            if (typeof mod === 'function') {
+		return bind ? mod.bind(mod) : mod;
+	    }
+	    if (mod?.default && typeof mod.default === 'function') {
+		return bind ? mod.default.bind(mod.default) : mod.default;
+	    }
+            return undefined;
 	}
 
-	const fn = this.bootstrap.constructor.LIBFUNCGET(fnPath, false, mod, bind);
+	const resolve = (scope) => {
+	    const fn = this.bootstrap.constructor.LIBFUNCGET(fnPath, false, scope, bind);
+	    return typeof fn === 'function' ? fn : undefined;
+	};
+
+	const fn = resolve(mod) ?? (mod?.default ? resolve(mod.default) : undefined);
 	return typeof fn === 'function' ? fn : undefined;
     }
 

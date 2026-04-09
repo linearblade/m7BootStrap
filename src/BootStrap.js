@@ -80,13 +80,50 @@ export class BootStrap {
     async loadBundle(url, packageList, opts = {}) {
 	opts = deepMerge(this.defaultLoadOpts, opts || {});
 	const resp = await this.bundler.load(url, packageList, opts);
-	const results = [];
+	const onLoad = opts?.load ?? null;
+	const onFail = opts?.error ?? null;
+	const report = new BootStrapLoadReport().start({
+	    pkgInstructions: packageList,
+	    mountInstructions: url,
+	    options: opts
+	});
+	const errors = [];
 
 	for (const bundle of resp.packages || []) {
-	    results.push(await this._loadBundledPackage(bundle, opts));
+	    const pkgReport = await this._loadBundledPackage(bundle, opts);
+	    report.addPackageReport(pkgReport);
+	    if (!pkgReport?.success) {
+		errors.push({
+		    id: pkgReport?.pkgId ?? pkgReport?.lid ?? null,
+		    ok: false,
+		    report: pkgReport
+		});
+		report.noteError({
+		    id: pkgReport?.pkgId ?? pkgReport?.lid ?? null,
+		    ok: false,
+		    comment: `package loading error for ${pkgReport?.pkgId ?? pkgReport?.lid ?? '[unknown]'}`
+		});
+	    }
 	}
 
-	return results;
+	report.finalize();
+	const [runner, rtype, phase] = report.success
+	    ? [onLoad, 'LOAD', 'load']
+	    : [onFail, 'ERROR', 'error'];
+
+	await this.handlePackageHooks(report, phase, 'Prepend', opts);
+	await this._runHandlers(
+	    runner,
+	    {
+		report,
+		options: opts,
+		err: errors
+	    },
+	    `[BOOTSTRAP-${rtype}]`
+	);
+	await this.handlePackageHooks(report, phase, 'Append', opts);
+
+	return report.packages;
     }
     
     /**
