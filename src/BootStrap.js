@@ -78,6 +78,7 @@ export class BootStrap {
 
 
     async loadBundle(url, packageList, opts = {}) {
+	opts = deepMerge(this.defaultLoadOpts, opts || {});
 	const resp = await this.bundler.load(url, packageList, opts);
 	const results = [];
 
